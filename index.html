@@ -177,8 +177,21 @@ const UI_TEXT = {
     nav_dashboard: 'Dashboard', nav_obras: 'Obras', nav_equipe: 'Equipe', nav_financeiro: 'Financeiro',
     nav_salarios: 'Salários', nav_pagamentos: 'Pagamentos', nav_servicos: 'Serviços', nav_metragens: 'Metragens',
     nav_notas_fiscais: 'Notas Fiscais', nav_notificacoes: 'Notificações', nav_sair: 'Sair',
+    appshell_editar_perfil_empresa: 'Editar perfil da empresa', appshell_mais: 'Mais',
     nav_tarefas: 'Plano de tarefas', nav_meu_dashboard: 'Meu dashboard',
     dashboard_title: 'Dashboard', dashboard_subtitle: 'Visão geral das obras e da equipe',
+    dash_painel_administrativo: 'Painel administrativo',
+    emp_area_colaborador: 'Área do colaborador',
+    emp_ola: (n) => `Olá, ${n}`,
+    emp_tarefas_subtitulo: 'Clique em uma obra para ver os detalhes, deixar notas ou solicitar alterações',
+    emp_nenhuma_obra: 'Nenhuma obra atribuída ainda', emp_nenhuma_obra_sub: 'Quando o administrador adicionar você a uma equipe de obra, ela vai aparecer aqui.',
+    emp_sem_endereco: 'Sem endereço', emp_a_receber: 'A receber: ', emp_alteracao_pendente: 'alteração pendente',
+    emp_meu_dashboard: 'Meu dashboard', emp_meu_dashboard_sub: 'Seu histórico de obras e pagamentos',
+    dash_obras: 'Obras', dash_colaboradores: 'Colaboradores', dash_visao_grafica: 'Visão gráfica',
+    dash_total_colaboradores: 'Total de colaboradores', dash_registrados_freelance: (r, f) => `${r} registrados · ${f} freelance`,
+    dash_pagamentos_realizados: 'Pagamentos realizados', dash_pagamentos_em_aberto: 'Pagamentos em aberto',
+    dash_status_das_obras: 'Status das obras', dash_financeiro_chart_title: 'Financeiro: pago/recebido vs. pendente',
+    dash_equipe: 'Equipe', dash_pago_recebido: 'Pago / Recebido', dash_pendente: 'Pendente',
     obras_title: 'Obras', obras_subtitle: 'Gerencie as obras da sua empresa',
     obras_cadastrar: 'Cadastrar obra', obras_mostrar_arquivadas: 'Mostrar arquivadas',
     status_a_iniciar: 'A iniciar', status_em_andamento: 'Em andamento', status_entregue: 'Entregue', status_atrasada: 'Atrasada', status_rascunho: 'Rascunho',
@@ -427,6 +440,7 @@ const UI_TEXT = {
     mc_salvar_projeto_texto: 'Salva a planta inteira (todas as paredes) e os cômodos nomeados acima como um projeto único na aba Metragens.',
     mc_nome_projeto_ph: 'Nome do projeto (ex: Casa Completa)',
     mc_salvar_metragem: 'Salvar metragem', mc_prefixo_parede: 'P',
+    mc_comodo_nao_localizado: 'Não foi possível localizar esse cômodo no desenho atual — pode ter sido alterado. Selecione-o de novo clicando na área.',
     cfm_title_editar: 'Editar empresa', cfm_title_novo: 'Cadastrar empresa',
     cfm_nome_empresa: 'Nome da empresa', cfm_nome_empresa_ph: 'Ex: Construtora Silva',
     cfm_email_login: 'E-mail de login (acesso do admin)',
@@ -498,8 +512,21 @@ const UI_TEXT = {
     nav_dashboard: 'Panel', nav_obras: 'Obras', nav_equipe: 'Equipo', nav_financeiro: 'Finanzas',
     nav_salarios: 'Salarios', nav_pagamentos: 'Pagos', nav_servicos: 'Servicios', nav_metragens: 'Metrajes',
     nav_notas_fiscais: 'Facturas', nav_notificacoes: 'Notificaciones', nav_sair: 'Salir',
+    appshell_editar_perfil_empresa: 'Editar perfil de la empresa', appshell_mais: 'Más',
     nav_tarefas: 'Plan de tareas', nav_meu_dashboard: 'Mi panel',
     dashboard_title: 'Panel', dashboard_subtitle: 'Visión general de las obras y del equipo',
+    dash_painel_administrativo: 'Panel administrativo',
+    emp_area_colaborador: 'Área del colaborador',
+    emp_ola: (n) => `Hola, ${n}`,
+    emp_tarefas_subtitulo: 'Haz clic en una obra para ver los detalles, dejar notas o solicitar cambios',
+    emp_nenhuma_obra: 'Ninguna obra asignada todavía', emp_nenhuma_obra_sub: 'Cuando el administrador te añada a un equipo de obra, aparecerá aquí.',
+    emp_sem_endereco: 'Sin dirección', emp_a_receber: 'A cobrar: ', emp_alteracao_pendente: 'cambio pendiente',
+    emp_meu_dashboard: 'Mi panel', emp_meu_dashboard_sub: 'Tu historial de obras y pagos',
+    dash_obras: 'Obras', dash_colaboradores: 'Colaboradores', dash_visao_grafica: 'Visión gráfica',
+    dash_total_colaboradores: 'Total de colaboradores', dash_registrados_freelance: (r, f) => `${r} registrados · ${f} autónomos`,
+    dash_pagamentos_realizados: 'Pagos realizados', dash_pagamentos_em_aberto: 'Pagos pendientes',
+    dash_status_das_obras: 'Estado de las obras', dash_financeiro_chart_title: 'Finanzas: pagado/cobrado vs. pendiente',
+    dash_equipe: 'Equipo', dash_pago_recebido: 'Pagado / Cobrado', dash_pendente: 'Pendiente',
     obras_title: 'Obras', obras_subtitle: 'Gestiona las obras de tu empresa',
     obras_cadastrar: 'Registrar obra', obras_mostrar_arquivadas: 'Mostrar archivadas',
     status_a_iniciar: 'Por iniciar', status_em_andamento: 'En curso', status_entregue: 'Entregada', status_atrasada: 'Retrasada', status_rascunho: 'Borrador',
@@ -748,6 +775,7 @@ const UI_TEXT = {
     mc_salvar_projeto_texto: 'Guarda el plano completo (todas las paredes) y los ambientes nombrados arriba como un solo proyecto en la pestaña Metrajes.',
     mc_nome_projeto_ph: 'Nombre del proyecto (ej: Casa Completa)',
     mc_salvar_metragem: 'Guardar metraje', mc_prefixo_parede: 'P',
+    mc_comodo_nao_localizado: 'No se pudo localizar esa habitación en el dibujo actual — puede haber sido modificada. Selecciónala de nuevo haciendo clic en el área.',
     cfm_title_editar: 'Editar empresa', cfm_title_novo: 'Registrar empresa',
     cfm_nome_empresa: 'Nombre de la empresa', cfm_nome_empresa_ph: 'Ej: Construcciones Silva',
     cfm_email_login: 'Correo de acceso (acceso del admin)',
@@ -819,8 +847,21 @@ const UI_TEXT = {
     nav_dashboard: 'Dashboard', nav_obras: 'Projects', nav_equipe: 'Team', nav_financeiro: 'Finance',
     nav_salarios: 'Payroll', nav_pagamentos: 'Payments', nav_servicos: 'Services', nav_metragens: 'Measurements',
     nav_notas_fiscais: 'Invoices', nav_notificacoes: 'Notifications', nav_sair: 'Log out',
+    appshell_editar_perfil_empresa: 'Edit company profile', appshell_mais: 'More',
     nav_tarefas: 'Task plan', nav_meu_dashboard: 'My dashboard',
     dashboard_title: 'Dashboard', dashboard_subtitle: 'Overview of your projects and team',
+    dash_painel_administrativo: 'Admin panel',
+    emp_area_colaborador: 'Team member area',
+    emp_ola: (n) => `Hi, ${n}`,
+    emp_tarefas_subtitulo: 'Click on a project to see details, leave notes, or request changes',
+    emp_nenhuma_obra: 'No project assigned yet', emp_nenhuma_obra_sub: 'When the admin adds you to a project team, it will show up here.',
+    emp_sem_endereco: 'No address', emp_a_receber: 'To receive: ', emp_alteracao_pendente: 'pending change',
+    emp_meu_dashboard: 'My dashboard', emp_meu_dashboard_sub: 'Your project and payment history',
+    dash_obras: 'Projects', dash_colaboradores: 'Team', dash_visao_grafica: 'Charts',
+    dash_total_colaboradores: 'Total team members', dash_registrados_freelance: (r, f) => `${r} employees · ${f} freelance`,
+    dash_pagamentos_realizados: 'Payments made', dash_pagamentos_em_aberto: 'Payments pending',
+    dash_status_das_obras: 'Project status', dash_financeiro_chart_title: 'Finance: paid/received vs. pending',
+    dash_equipe: 'Team', dash_pago_recebido: 'Paid / Received', dash_pendente: 'Pending',
     obras_title: 'Projects', obras_subtitle: "Manage your company's projects",
     obras_cadastrar: 'New project', obras_mostrar_arquivadas: 'Show archived',
     status_a_iniciar: 'Not started', status_em_andamento: 'In progress', status_entregue: 'Delivered', status_atrasada: 'Delayed', status_rascunho: 'Draft',
@@ -1069,6 +1110,7 @@ const UI_TEXT = {
     mc_salvar_projeto_texto: 'Saves the whole floor plan (all walls) and the rooms named above as a single project in the Measurements tab.',
     mc_nome_projeto_ph: 'Project name (e.g: Full House)',
     mc_salvar_metragem: 'Save measurement', mc_prefixo_parede: 'W',
+    mc_comodo_nao_localizado: 'Could not locate this room in the current drawing — it may have changed. Select it again by clicking the area.',
     cfm_title_editar: 'Edit company', cfm_title_novo: 'Register company',
     cfm_nome_empresa: 'Company name', cfm_nome_empresa_ph: 'E.g.: Silva Construction',
     cfm_email_login: 'Login email (admin access)',
@@ -1625,6 +1667,8 @@ const LANDING_TEXT = {
     successCta: 'Go to login',
     footer: 'Obra Organize · AIVACS Soluções Digitais',
     genericErr: 'Error signing up. Please try again.',
+    loading: 'Loading...',
+    devBy: 'System developed by', devByQuestion: 'Want to build your own system? Contact us:',
   },
   pt: {
     login: 'Já tenho conta · Entrar',
@@ -1669,6 +1713,8 @@ const LANDING_TEXT = {
     successCta: 'Ir para o login',
     footer: 'Obra Organize · AIVACS Soluções Digitais',
     genericErr: 'Erro ao cadastrar. Tente novamente.',
+    loading: 'Carregando...',
+    devBy: 'Sistema desenvolvido pela', devByQuestion: 'Quer desenvolver seu próprio sistema? Entre em contato:',
   },
   es: {
     login: '¿Ya tienes cuenta? · Iniciar sesión',
@@ -1713,6 +1759,8 @@ const LANDING_TEXT = {
     successCta: 'Ir a iniciar sesión',
     footer: 'Obra Organize · AIVACS Soluções Digitais',
     genericErr: 'Error al registrar. Inténtalo de nuevo.',
+    loading: 'Cargando...',
+    devBy: 'Sistema desarrollado por', devByQuestion: '¿Quieres desarrollar tu propio sistema? Contáctanos:',
   },
 };
 
@@ -1820,7 +1868,7 @@ function LandingPage({ onBackToLogin, mode = 'generic' }) {
       <div className="min-h-screen bg-blueprint flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-white/20 border-t-safety rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400 text-sm">Carregando...</p>
+          <p className="text-slate-400 text-sm">{t.loading}</p>
         </div>
       </div>
     );
@@ -1937,8 +1985,8 @@ function LandingPage({ onBackToLogin, mode = 'generic' }) {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 text-center text-slate-400 text-xs space-y-2">
           <p>{t.footer}</p>
           <div className="pt-2 border-t border-white/10 space-y-1">
-            <p>{locale === 'es' ? 'Sistema desarrollado por' : 'Sistema desenvolvido pela'} <span className="text-slate-300 font-medium">AIVACS Soluções Digitais</span></p>
-            <p>{locale === 'es' ? '¿Quieres desarrollar tu propio sistema? Contáctanos:' : 'Quer desenvolver seu próprio sistema? Entre em contato:'}</p>
+            <p>{t.devBy} <span className="text-slate-300 font-medium">AIVACS Soluções Digitais</span></p>
+            <p>{t.devByQuestion}</p>
             <p className="text-slate-300">
               {country === 'BR' ? (
                 <span className="whitespace-nowrap">🇧🇷 +55 (44) 99909-5969</span>
@@ -2025,7 +2073,7 @@ function AppShell({ title, subtitle, navItems, active, onNavigate, onLogout, log
             <button onClick={() => { onEditProfile(); setSidebarOpen(false); }}
               className="mt-2.5 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-white/10 border border-white/10 transition-colors">
               <Icon path={ICONS.edit} className="w-3.5 h-3.5" />
-              Editar perfil da empresa
+              {t('appshell_editar_perfil_empresa')}
             </button>
           )}
         </div>
@@ -2099,7 +2147,7 @@ function AppShell({ title, subtitle, navItems, active, onNavigate, onLogout, log
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
             </svg>
-            <span style={{ fontSize: '10px' }}>Mais</span>
+            <span style={{ fontSize: '10px' }}>{t('appshell_mais')}</span>
           </button>
         )}
       </nav>
@@ -2852,7 +2900,7 @@ function AdminArea({ profile, onLogout }) {
   return (
     <AppShell
       title={company?.name || 'Empresa'}
-      subtitle="Painel administrativo"
+      subtitle={t('dash_painel_administrativo')}
       logo={company?.logo_url}
       navItems={navItems}
       active={page}
@@ -2867,28 +2915,28 @@ function AdminArea({ profile, onLogout }) {
         <>
           <PageHeader title={t('dashboard_title')} subtitle={t('dashboard_subtitle')} />
 
-          <h2 className="font-display font-semibold text-lg mb-4">Obras</h2>
+          <h2 className="font-display font-semibold text-lg mb-4">{t('dash_obras')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <StatCard icon="briefcase" label="A iniciar" value={stats.projects.a_iniciar} />
-            <StatCard icon="briefcase" label="Em andamento" value={stats.projects.em_andamento} accent="safety" />
-            <StatCard icon="check" label="Entregues" value={stats.projects.entregue} />
-            <StatCard icon="briefcase" label="Atrasadas" value={stats.projects.atrasada} />
+            <StatCard icon="briefcase" label={t('status_a_iniciar')} value={stats.projects.a_iniciar} />
+            <StatCard icon="briefcase" label={t('status_em_andamento')} value={stats.projects.em_andamento} accent="safety" />
+            <StatCard icon="check" label={t('status_entregue')} value={stats.projects.entregue} />
+            <StatCard icon="briefcase" label={t('status_atrasada')} value={stats.projects.atrasada} />
           </div>
 
-          <h2 className="font-display font-semibold text-lg mb-4">Colaboradores</h2>
+          <h2 className="font-display font-semibold text-lg mb-4">{t('dash_colaboradores')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <StatCard icon="users" label="Total de colaboradores" value={stats.totalEmployees} sub={`${stats.registered} registrados · ${stats.freelance} freelance`} />
-            <StatCard icon={currentCurrencyIcon()} label="Pagamentos realizados" value={fmtCurrency(stats.paidToTeams)} />
-            <StatCard icon={currentCurrencyIcon()} label="Pagamentos em aberto" value={fmtCurrency(stats.pendingToTeams)} />
+            <StatCard icon="users" label={t('dash_total_colaboradores')} value={stats.totalEmployees} sub={t('dash_registrados_freelance')(stats.registered, stats.freelance)} />
+            <StatCard icon={currentCurrencyIcon()} label={t('dash_pagamentos_realizados')} value={fmtCurrency(stats.paidToTeams)} />
+            <StatCard icon={currentCurrencyIcon()} label={t('dash_pagamentos_em_aberto')} value={fmtCurrency(stats.pendingToTeams)} />
           </div>
 
-          <h2 className="font-display font-semibold text-lg mb-4">Visão gráfica</h2>
+          <h2 className="font-display font-semibold text-lg mb-4">{t('dash_visao_grafica')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ChartCard title="Status das obras">
+            <ChartCard title={t('dash_status_das_obras')}>
               <ChartCanvas config={{
                 type: 'doughnut',
                 data: {
-                  labels: ['A iniciar', 'Em andamento', 'Entregue', 'Atrasada'],
+                  labels: [t('status_a_iniciar'), t('status_em_andamento'), t('status_entregue'), t('status_atrasada')],
                   datasets: [{
                     data: [stats.projects.a_iniciar, stats.projects.em_andamento, stats.projects.entregue, stats.projects.atrasada],
                     backgroundColor: ['#94A3B8', '#F59E0B', '#22C55E', '#EF4444'],
@@ -2902,14 +2950,14 @@ function AdminArea({ profile, onLogout }) {
                 },
               }} />
             </ChartCard>
-            <ChartCard title="Financeiro: pago/recebido vs. pendente">
+            <ChartCard title={t('dash_financeiro_chart_title')}>
               <ChartCanvas config={{
                 type: 'bar',
                 data: {
-                  labels: ['Equipe', 'Obras'],
+                  labels: [t('dash_equipe'), t('dash_obras')],
                   datasets: [
-                    { label: 'Pago / Recebido', data: [stats.paidToTeams, stats.totalBudget - stats.toReceive], backgroundColor: '#22C55E', borderRadius: 6 },
-                    { label: 'Pendente', data: [stats.pendingToTeams, stats.toReceive], backgroundColor: '#F2641A', borderRadius: 6 },
+                    { label: t('dash_pago_recebido'), data: [stats.paidToTeams, stats.totalBudget - stats.toReceive], backgroundColor: '#22C55E', borderRadius: 6 },
+                    { label: t('dash_pendente'), data: [stats.pendingToTeams, stats.toReceive], backgroundColor: '#F2641A', borderRadius: 6 },
                   ],
                 },
                 options: {
@@ -6303,7 +6351,7 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
       r.wallIndices.every(i => entry.wallIndices.includes(i))
     );
     if (matchIdx === -1) {
-      alert('Não foi possível localizar esse cômodo no desenho atual — pode ter sido alterado. Selecione-o de novo clicando na área.');
+      alert(t('mc_comodo_nao_localizado'));
       return;
     }
     s.selected = null;
@@ -7582,12 +7630,12 @@ function EmployeeArea({ profile, onLogout }) {
   if (loading) return <Spinner />;
 
   return (
-    <AppShell title={profile.full_name} subtitle="Área do colaborador" navItems={navItems} active={page} onNavigate={setPage} onLogout={onLogout}>
+    <AppShell title={profile.full_name} subtitle={t('emp_area_colaborador')} navItems={navItems} active={page} onNavigate={setPage} onLogout={onLogout}>
       {page === 'tarefas' && (
         <>
-          <PageHeader title={`Olá, ${profile.full_name.split(' ')[0]}`} subtitle="Clique em uma obra para ver os detalhes, deixar notas ou solicitar alterações" />
+          <PageHeader title={t('emp_ola')(profile.full_name.split(' ')[0])} subtitle={t('emp_tarefas_subtitulo')} />
           {projects.length === 0 ? (
-            <EmptyState icon="briefcase" title="Nenhuma obra atribuída ainda" subtitle="Quando o administrador adicionar você a uma equipe de obra, ela vai aparecer aqui." />
+            <EmptyState icon="briefcase" title={t('emp_nenhuma_obra')} subtitle={t('emp_nenhuma_obra_sub')} />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {projects.map(p => {
@@ -7601,12 +7649,12 @@ function EmployeeArea({ profile, onLogout }) {
                       <StatusBadge status={p.status} />
                     </div>
                     <div className="text-sm text-slate-500 mb-3 line-clamp-2">{p.description}</div>
-                    <div className="text-xs text-slate-400 flex items-center gap-1 mb-2"><Icon path={ICONS.pin} className="w-3.5 h-3.5"/>{p.address || 'Sem endereço'}</div>
+                    <div className="text-xs text-slate-400 flex items-center gap-1 mb-2"><Icon path={ICONS.pin} className="w-3.5 h-3.5"/>{p.address || t('emp_sem_endereco')}</div>
                     <div className="text-xs text-slate-400 mb-2">{fmtDate(p.start_date)} → {fmtDate(p.end_date)}</div>
                     {teamRow && teamRow.payment_type !== 'salario' && (
                       <div className="font-mono text-sm text-blueprint border-t border-slate-100 pt-2 mt-1">
-                        A receber: {fmtCurrency(teamRow.payment_value)}
-                        {pendingRequest && <span className="ml-2 text-xs text-amber-600 font-sans">· alteração pendente</span>}
+                        {t('emp_a_receber')}{fmtCurrency(teamRow.payment_value)}
+                        {pendingRequest && <span className="ml-2 text-xs text-amber-600 font-sans">· {t('emp_alteracao_pendente')}</span>}
                       </div>
                     )}
                   </div>
@@ -7619,7 +7667,7 @@ function EmployeeArea({ profile, onLogout }) {
 
       {page === 'dashboard' && (
         <>
-          <PageHeader title="Meu dashboard" subtitle="Seu histórico de obras e pagamentos" />
+          <PageHeader title={t('emp_meu_dashboard')} subtitle={t('emp_meu_dashboard_sub')} />
           <EmployeeDashboard employee={employee} team={team} salaryPayments={salaryPayments} projects={projects} />
         </>
       )}
