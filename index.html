@@ -168,7 +168,7 @@ const UI_TEXT = {
     dashboard_title: 'Dashboard', dashboard_subtitle: 'Visão geral das obras e da equipe',
     obras_title: 'Obras', obras_subtitle: 'Gerencie as obras da sua empresa',
     obras_cadastrar: 'Cadastrar obra', obras_mostrar_arquivadas: 'Mostrar arquivadas',
-    status_a_iniciar: 'A iniciar', status_em_andamento: 'Em andamento', status_entregue: 'Entregue', status_atrasada: 'Atrasada',
+    status_a_iniciar: 'A iniciar', status_em_andamento: 'Em andamento', status_entregue: 'Entregue', status_atrasada: 'Atrasada', status_rascunho: 'Rascunho',
     obras_vazio_titulo: 'Nenhuma obra cadastrada', obras_vazio_subtitulo: 'Cadastre sua primeira obra para começar a organizar equipes e prazos.',
     obras_arquivada: 'Arquivada', obras_cliente: 'Cliente', obras_sem_endereco: 'Sem endereço',
     fin_title: 'Financeiro', fin_subtitle: 'Recebimentos, impostos e visão financeira geral',
@@ -274,6 +274,8 @@ const UI_TEXT = {
     sb_selecione_servico: (n) => `Selecione o serviço ${n}...`,
     sb_pesquisar_servico: 'Pesquisar serviço...', sb_nenhum_servico: 'Nenhum serviço encontrado',
     sb_cadastre_personalizado: 'Cadastre serviços personalizados na aba Serviços',
+    sb_sem_servico_cadastrado: 'Nenhum serviço cadastrado. Cadastre um serviço na aba Serviços antes de continuar.',
+    pf_obra_sem_titulo: 'Obra sem título',
     sb_metodo_orcar: 'Método para orçar...',
     pf_title_editar: 'Editar obra', pf_title_nova: 'Cadastrar obra',
     pf_nome_obra: 'Nome da obra', pf_nome_obra_ph: 'Ex: Reforma Apartamento Centro',
@@ -452,7 +454,7 @@ const UI_TEXT = {
     dashboard_title: 'Panel', dashboard_subtitle: 'Visión general de las obras y del equipo',
     obras_title: 'Obras', obras_subtitle: 'Gestiona las obras de tu empresa',
     obras_cadastrar: 'Registrar obra', obras_mostrar_arquivadas: 'Mostrar archivadas',
-    status_a_iniciar: 'Por iniciar', status_em_andamento: 'En curso', status_entregue: 'Entregada', status_atrasada: 'Retrasada',
+    status_a_iniciar: 'Por iniciar', status_em_andamento: 'En curso', status_entregue: 'Entregada', status_atrasada: 'Retrasada', status_rascunho: 'Borrador',
     obras_vazio_titulo: 'Ninguna obra registrada', obras_vazio_subtitulo: 'Registra tu primera obra para empezar a organizar equipos y plazos.',
     obras_arquivada: 'Archivada', obras_cliente: 'Cliente', obras_sem_endereco: 'Sin dirección',
     fin_title: 'Finanzas', fin_subtitle: 'Cobros, impuestos y visión financiera general',
@@ -558,6 +560,8 @@ const UI_TEXT = {
     sb_selecione_servico: (n) => `Selecciona el servicio ${n}...`,
     sb_pesquisar_servico: 'Buscar servicio...', sb_nenhum_servico: 'Ningún servicio encontrado',
     sb_cadastre_personalizado: 'Registra servicios personalizados en la pestaña Servicios',
+    sb_sem_servico_cadastrado: 'Ningún servicio registrado. Registra un servicio en la pestaña Servicios antes de continuar.',
+    pf_obra_sem_titulo: 'Obra sin título',
     sb_metodo_orcar: 'Método para presupuestar...',
     pf_title_editar: 'Editar obra', pf_title_nova: 'Registrar obra',
     pf_nome_obra: 'Nombre de la obra', pf_nome_obra_ph: 'Ej: Reforma Apartamento Centro',
@@ -736,7 +740,7 @@ const UI_TEXT = {
     dashboard_title: 'Dashboard', dashboard_subtitle: 'Overview of your projects and team',
     obras_title: 'Projects', obras_subtitle: "Manage your company's projects",
     obras_cadastrar: 'New project', obras_mostrar_arquivadas: 'Show archived',
-    status_a_iniciar: 'Not started', status_em_andamento: 'In progress', status_entregue: 'Delivered', status_atrasada: 'Delayed',
+    status_a_iniciar: 'Not started', status_em_andamento: 'In progress', status_entregue: 'Delivered', status_atrasada: 'Delayed', status_rascunho: 'Draft',
     obras_vazio_titulo: 'No projects yet', obras_vazio_subtitulo: 'Add your first project to start organizing teams and deadlines.',
     obras_arquivada: 'Archived', obras_cliente: 'Client', obras_sem_endereco: 'No address',
     fin_title: 'Finance', fin_subtitle: 'Payments, taxes and overall financial view',
@@ -842,6 +846,8 @@ const UI_TEXT = {
     sb_selecione_servico: (n) => `Select service ${n}...`,
     sb_pesquisar_servico: 'Search service...', sb_nenhum_servico: 'No service found',
     sb_cadastre_personalizado: 'Add custom services in the Services tab',
+    sb_sem_servico_cadastrado: 'No service registered. Register a service in the Services tab before continuing.',
+    pf_obra_sem_titulo: 'Untitled project',
     sb_metodo_orcar: 'Pricing method...',
     pf_title_editar: 'Edit project', pf_title_nova: 'New project',
     pf_nome_obra: 'Project name', pf_nome_obra_ph: 'E.g: Downtown Apartment Remodel',
@@ -1031,6 +1037,7 @@ const setCurrentLocaleDirect = (locale) => {
 const t = (key) => (UI_TEXT[_currentLocale] && UI_TEXT[_currentLocale][key]) || UI_TEXT.pt[key] || key;
 
 const STATUS_CONFIG = {
+  rascunho:     { label: 'Rascunho',      classes: 'bg-orange-50 text-orange-700 border-orange-300' },
   a_iniciar:    { label: 'A iniciar',     classes: 'bg-slate-100 text-slate-600 border-slate-300' },
   em_andamento: { label: 'Em andamento',  classes: 'bg-amber-50 text-amber-700 border-amber-300' },
   entregue:     { label: 'Entregue',      classes: 'bg-emerald-50 text-emerald-700 border-emerald-300' },
@@ -4349,7 +4356,7 @@ function ServiceBlock({ s, idx, isTarima, onUpdate, onRemove, canRemove, onOpenC
   const activeServices = hasCustom ? companyServices.filter(sv => sv.active) : [];
   const filtered = hasCustom
     ? activeServices.filter(sv => sv.name.toLowerCase().includes(search.toLowerCase()))
-    : Object.entries(getServiceTypes()).filter(([, label]) => label.toLowerCase().includes(search.toLowerCase())).map(([k, label]) => ({ id: k, name: label }));
+    : [];
 
   const displayName = s.service_name || getServiceTypes()[s.service_type] || '';
 
@@ -4393,20 +4400,21 @@ function ServiceBlock({ s, idx, isTarima, onUpdate, onRemove, canRemove, onOpenC
                   {search && <button type="button" onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600"><Icon path={ICONS.x} className="w-3.5 h-3.5"/></button>}
                 </div>
               </div>
-              <div className="max-h-48 overflow-y-auto py-1">
-                {filtered.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-slate-400 text-center">{t('sb_nenhum_servico')}</div>
-                ) : filtered.map(svc => (
-                  <button key={svc.id || svc.name} type="button" onClick={() => selectService(svc)}
-                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors ${(s.service_name === svc.name || s.service_type === svc.id) ? 'text-safety font-medium bg-safety/5' : 'text-blueprint'}`}>
-                    {svc.name}
-                    {svc.default_pricing_method && <span className="ml-2 text-xs text-slate-400">· {PRICING_METHODS.find(m => m.key === svc.default_pricing_method)?.label}</span>}
-                  </button>
-                ))}
-              </div>
-              {!hasCustom && (
-                <div className="px-4 py-2 border-t border-slate-100 text-xs text-slate-400">
-                  {t('sb_cadastre_personalizado')}
+              {!hasCustom ? (
+                <div className="px-4 py-4 text-sm text-red-600 font-medium text-center">
+                  {t('sb_sem_servico_cadastrado')}
+                </div>
+              ) : (
+                <div className="max-h-48 overflow-y-auto py-1">
+                  {filtered.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-slate-400 text-center">{t('sb_nenhum_servico')}</div>
+                  ) : filtered.map(svc => (
+                    <button key={svc.id || svc.name} type="button" onClick={() => selectService(svc)}
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 transition-colors ${(s.service_name === svc.name || s.service_type === svc.id) ? 'text-safety font-medium bg-safety/5' : 'text-blueprint'}`}>
+                      {svc.name}
+                      {svc.default_pricing_method && <span className="ml-2 text-xs text-slate-400">· {PRICING_METHODS.find(m => m.key === svc.default_pricing_method)?.label}</span>}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -4865,8 +4873,15 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
     const finalBudget = anyServiceSelected ? grandTotal : (form.budget ? grandTotal : null);
     const usedServices = services.filter(s => s.service_type || s.service_name);
 
+    // Nome, tipo de serviço e equipe são os 3 dados que definem se a obra está completa.
+    // Faltando qualquer um deles, a obra é salva como rascunho em vez de bloquear o cadastro.
+    const tituloPreenchido = form.title.trim().length > 0;
+    const servicoPreenchido = usedServices.length > 0;
+    const equipePreenchida = Object.keys(selectedTeam).length > 0;
+    const completo = tituloPreenchido && servicoPreenchido && equipePreenchida;
+
     const projectData = {
-      title: form.title,
+      title: tituloPreenchido ? form.title.trim() : t('pf_obra_sem_titulo'),
       client_name: form.client_name || null,
       address: form.address || null,
       work_to_do: form.work_to_do || null,
@@ -4890,8 +4905,13 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
 
     let project;
     if (isEdit) {
-      // UPDATE existing project
-      const { data, error: projError } = await db.from('projects').update(projectData).eq('id', editingProject.id).select().single();
+      // UPDATE existing project — só mexe no status se a obra ainda estava em rascunho;
+      // uma obra que já avançou (em andamento, entregue etc.) não regride sozinha.
+      const updatePayload = { ...projectData };
+      if (editingProject.status === 'rascunho') {
+        updatePayload.status = completo ? 'a_iniciar' : 'rascunho';
+      }
+      const { data, error: projError } = await db.from('projects').update(updatePayload).eq('id', editingProject.id).select().single();
       if (projError) { setError(projError.message); setSaving(false); return; }
       project = data;
       // Delete and re-insert services
@@ -4900,7 +4920,7 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
       await db.from('project_descriptions').delete().eq('project_id', editingProject.id);
     } else {
       // INSERT new project
-      const { data, error: projError } = await db.from('projects').insert({ company_id: companyId, ...projectData, status: 'a_iniciar' }).select().single();
+      const { data, error: projError } = await db.from('projects').insert({ company_id: companyId, ...projectData, status: completo ? 'a_iniciar' : 'rascunho' }).select().single();
       if (projError) { setError(projError.message); setSaving(false); return; }
       project = data;
     }
@@ -4988,7 +5008,7 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
   return (
     <Modal title={isEdit ? t('pf_title_editar') : t('pf_title_nova')} onClose={onClose} wide>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label={t('pf_nome_obra')} required value={form.title} onChange={set('title')} placeholder={t('pf_nome_obra_ph')} />
+        <Input label={t('pf_nome_obra')} value={form.title} onChange={set('title')} placeholder={t('pf_nome_obra_ph')} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input label={t('pf_cliente')} value={form.client_name} onChange={set('client_name')} placeholder={t('pf_cliente')} />
           <Input label={t('pf_endereco')} value={form.address} onChange={set('address')} placeholder={t('pf_endereco')} />
@@ -6842,6 +6862,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
               {t('pd_gerar_pdf')}
             </button>
             <Select value={status} onChange={e => updateStatus(e.target.value)}>
+              <option value="rascunho">{t('status_rascunho')}</option>
               <option value="a_iniciar">{t('status_a_iniciar')}</option>
               <option value="em_andamento">{t('status_em_andamento')}</option>
               <option value="entregue">{t('status_entregue')}</option>
@@ -6937,7 +6958,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
               {team.map(t2 => (
                 <label key={t2.id} className="flex items-center justify-between gap-3 bg-white border border-slate-100 rounded-xl px-4 py-3 cursor-pointer">
                   <div className="flex items-center gap-3">
-                    <input type="checkbox" checked={t2.payment_status === 'pago'} onChange={() => togglePayment(t2)} className="w-4 h-4 accent-safety rounded" />
+                    <input type="checkbox" checked={t2.is_self ? true : t2.payment_status === 'pago'} disabled={t2.is_self} onChange={() => togglePayment(t2)} className="w-4 h-4 accent-safety rounded disabled:opacity-100" />
                     <div>
                       <div className="text-sm font-medium text-blueprint">{t2.is_self ? t('pd_voce_mesmo')(t2.profiles?.full_name || t('pd_voce')) : t2.employees?.full_name}</div>
                       <div className="text-xs text-slate-400">
