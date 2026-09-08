@@ -146,6 +146,19 @@ const currentCurrencyIcon = () => {
   const entry = Object.entries(CURRENCY_BY_COUNTRY).find(([, c]) => c === _currentCurrency);
   return CURRENCY_ICON[entry ? entry[0] : 'ES'];
 };
+const currentCountryCode = () => {
+  const entry = Object.entries(CURRENCY_BY_COUNTRY).find(([, c]) => c === _currentCurrency);
+  return entry ? entry[0] : 'ES';
+};
+// Formas de pagamento sugeridas por país — inclui os meios mais usados localmente
+// (Bizum na Espanha, Pix no Brasil) além das opções genéricas.
+const PAYMENT_METHODS_BY_COUNTRY = {
+  BR: ['dinheiro', 'pix', 'transferencia', 'cartao', 'cheque', 'outro'],
+  ES: ['efectivo', 'bizum', 'transferencia', 'tarjeta', 'cheque', 'outro'],
+  US: ['cash', 'transferencia', 'cartao', 'cheque', 'outro'],
+};
+const getPaymentMethods = () => (PAYMENT_METHODS_BY_COUNTRY[currentCountryCode()] || PAYMENT_METHODS_BY_COUNTRY.ES)
+  .map(key => ({ key, label: t('pm_' + key) }));
 const fmtDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-PT') : '—';
 
 // ============================================================
@@ -162,7 +175,7 @@ const fmtDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-PT')
 const UI_TEXT = {
   pt: {
     nav_dashboard: 'Dashboard', nav_obras: 'Obras', nav_equipe: 'Equipe', nav_financeiro: 'Financeiro',
-    nav_salarios: 'Salários', nav_servicos: 'Serviços', nav_metragens: 'Metragens',
+    nav_salarios: 'Salários', nav_pagamentos: 'Pagamentos', nav_servicos: 'Serviços', nav_metragens: 'Metragens',
     nav_notas_fiscais: 'Notas Fiscais', nav_notificacoes: 'Notificações', nav_sair: 'Sair',
     nav_tarefas: 'Plano de tarefas', nav_meu_dashboard: 'Meu dashboard',
     dashboard_title: 'Dashboard', dashboard_subtitle: 'Visão geral das obras e da equipe',
@@ -212,6 +225,23 @@ const UI_TEXT = {
     sal_obras_cadastradas: (count) => `${count} obra(s) cadastrada(s)`,
     sal_recebido: 'Recebido',
     sal_vazio_titulo: 'Nenhum colaborador cadastrado', sal_vazio_subtitulo: 'Cadastre colaboradores na aba Equipe para visualizar dados financeiros aqui.',
+    pag_title: 'Pagamentos', pag_subtitle: 'Registre os pagamentos a autônomos e funcionários, com data, hora e forma de pagamento.',
+    pag_secao_autonomos: 'Autônomos — pagamentos por obra',
+    pag_secao_funcionarios: (month) => `Funcionários registrados — folha de ${month}`,
+    pag_vazio_autonomos: 'Nenhum pagamento de autônomo pendente ou registrado.',
+    pag_vazio_funcionarios: 'Nenhum funcionário registrado cadastrado.',
+    pag_status_pago: 'Pago', pag_status_a_pagar: 'A pagar', pag_status_atrasado: 'Atrasado',
+    pag_marcar_pago: 'Marcar como pago', pag_pago_em: (date) => `Pago em ${date}`,
+    pag_dia: (day) => `Dia ${day}`,
+    pag_modal_title: 'Registrar pagamento', pag_valor_total: 'Valor a pagar',
+    pag_data_hora: 'Data e hora do pagamento', pag_forma_pagamento: 'Forma de pagamento',
+    pag_adicionar_forma: '+ Adicionar outra forma de pagamento', pag_remover_forma: 'Remover',
+    pag_soma_formas: (sum) => `Soma das formas: ${sum}`, pag_diferente_total: (total) => `O valor total a pagar é ${total}`,
+    pag_confirmar: 'Confirmar pagamento', pag_cancelar: 'Cancelar', pag_desfazer: 'Desfazer pagamento',
+    pag_erro_soma: 'A soma das formas de pagamento precisa ser igual ao valor total.',
+    pag_metodo_placeholder: 'Selecione...', pag_valor_placeholder: 'Valor',
+    pm_dinheiro: 'Dinheiro', pm_pix: 'Pix', pm_transferencia: 'Transferência', pm_cartao: 'Cartão', pm_cheque: 'Cheque', pm_outro: 'Outro',
+    pm_efectivo: 'Efectivo', pm_bizum: 'Bizum', pm_tarjeta: 'Tarjeta', pm_cash: 'Cash',
     servicos_title: 'Serviços', servicos_subtitle: 'Catálogo de serviços da sua empresa', servicos_cadastrar: 'Cadastrar serviço',
     servicos_vazio_titulo: 'Nenhum serviço cadastrado', servicos_vazio_subtitulo: 'Cadastre os tipos de serviço que sua empresa oferece.',
     servicos_inativo: 'Inativo', servicos_desativar: 'Desativar', servicos_ativar: 'Ativar',
@@ -448,7 +478,7 @@ const UI_TEXT = {
   },
   es: {
     nav_dashboard: 'Panel', nav_obras: 'Obras', nav_equipe: 'Equipo', nav_financeiro: 'Finanzas',
-    nav_salarios: 'Salarios', nav_servicos: 'Servicios', nav_metragens: 'Metrajes',
+    nav_salarios: 'Salarios', nav_pagamentos: 'Pagos', nav_servicos: 'Servicios', nav_metragens: 'Metrajes',
     nav_notas_fiscais: 'Facturas', nav_notificacoes: 'Notificaciones', nav_sair: 'Salir',
     nav_tarefas: 'Plan de tareas', nav_meu_dashboard: 'Mi panel',
     dashboard_title: 'Panel', dashboard_subtitle: 'Visión general de las obras y del equipo',
@@ -498,6 +528,23 @@ const UI_TEXT = {
     sal_obras_cadastradas: (count) => `${count} obra(s) registrada(s)`,
     sal_recebido: 'Cobrado',
     sal_vazio_titulo: 'Ningún colaborador registrado', sal_vazio_subtitulo: 'Registra colaboradores en la pestaña Equipo para ver datos financieros aquí.',
+    pag_title: 'Pagos', pag_subtitle: 'Registra los pagos a autónomos y empleados, con fecha, hora y forma de pago.',
+    pag_secao_autonomos: 'Autónomos — pagos por obra',
+    pag_secao_funcionarios: (month) => `Empleados registrados — nómina de ${month}`,
+    pag_vazio_autonomos: 'Ningún pago de autónomo pendiente o registrado.',
+    pag_vazio_funcionarios: 'Ningún empleado registrado dado de alta.',
+    pag_status_pago: 'Pagado', pag_status_a_pagar: 'A pagar', pag_status_atrasado: 'Atrasado',
+    pag_marcar_pago: 'Marcar como pagado', pag_pago_em: (date) => `Pagado el ${date}`,
+    pag_dia: (day) => `Día ${day}`,
+    pag_modal_title: 'Registrar pago', pag_valor_total: 'Valor a pagar',
+    pag_data_hora: 'Fecha y hora del pago', pag_forma_pagamento: 'Forma de pago',
+    pag_adicionar_forma: '+ Añadir otra forma de pago', pag_remover_forma: 'Quitar',
+    pag_soma_formas: (sum) => `Suma de las formas: ${sum}`, pag_diferente_total: (total) => `El valor total a pagar es ${total}`,
+    pag_confirmar: 'Confirmar pago', pag_cancelar: 'Cancelar', pag_desfazer: 'Deshacer pago',
+    pag_erro_soma: 'La suma de las formas de pago debe ser igual al valor total.',
+    pag_metodo_placeholder: 'Selecciona...', pag_valor_placeholder: 'Valor',
+    pm_dinheiro: 'Efectivo', pm_pix: 'Pix', pm_transferencia: 'Transferencia', pm_cartao: 'Tarjeta', pm_cheque: 'Cheque', pm_outro: 'Otro',
+    pm_efectivo: 'Efectivo', pm_bizum: 'Bizum', pm_tarjeta: 'Tarjeta', pm_cash: 'Cash',
     servicos_title: 'Servicios', servicos_subtitle: 'Catálogo de servicios de tu empresa', servicos_cadastrar: 'Registrar servicio',
     servicos_vazio_titulo: 'Ningún servicio registrado', servicos_vazio_subtitulo: 'Registra los tipos de servicio que ofrece tu empresa.',
     servicos_inativo: 'Inactivo', servicos_desativar: 'Desactivar', servicos_ativar: 'Activar',
@@ -734,7 +781,7 @@ const UI_TEXT = {
   },
   en: {
     nav_dashboard: 'Dashboard', nav_obras: 'Projects', nav_equipe: 'Team', nav_financeiro: 'Finance',
-    nav_salarios: 'Payroll', nav_servicos: 'Services', nav_metragens: 'Measurements',
+    nav_salarios: 'Payroll', nav_pagamentos: 'Payments', nav_servicos: 'Services', nav_metragens: 'Measurements',
     nav_notas_fiscais: 'Invoices', nav_notificacoes: 'Notifications', nav_sair: 'Log out',
     nav_tarefas: 'Task plan', nav_meu_dashboard: 'My dashboard',
     dashboard_title: 'Dashboard', dashboard_subtitle: 'Overview of your projects and team',
@@ -784,6 +831,23 @@ const UI_TEXT = {
     sal_obras_cadastradas: (count) => `${count} project(s) assigned`,
     sal_recebido: 'Received',
     sal_vazio_titulo: 'No team members yet', sal_vazio_subtitulo: 'Add team members in the Team tab to see financial data here.',
+    pag_title: 'Payments', pag_subtitle: 'Record payments to freelancers and employees, with date, time and payment method.',
+    pag_secao_autonomos: 'Freelancers — payments per project',
+    pag_secao_funcionarios: (month) => `Registered employees — ${month} payroll`,
+    pag_vazio_autonomos: 'No freelancer payment pending or recorded.',
+    pag_vazio_funcionarios: 'No registered employees yet.',
+    pag_status_pago: 'Paid', pag_status_a_pagar: 'Due', pag_status_atrasado: 'Overdue',
+    pag_marcar_pago: 'Mark as paid', pag_pago_em: (date) => `Paid on ${date}`,
+    pag_dia: (day) => `Day ${day}`,
+    pag_modal_title: 'Record payment', pag_valor_total: 'Amount due',
+    pag_data_hora: 'Payment date and time', pag_forma_pagamento: 'Payment method',
+    pag_adicionar_forma: '+ Add another payment method', pag_remover_forma: 'Remove',
+    pag_soma_formas: (sum) => `Methods total: ${sum}`, pag_diferente_total: (total) => `The total amount due is ${total}`,
+    pag_confirmar: 'Confirm payment', pag_cancelar: 'Cancel', pag_desfazer: 'Undo payment',
+    pag_erro_soma: 'The payment methods must add up to the total amount.',
+    pag_metodo_placeholder: 'Select...', pag_valor_placeholder: 'Amount',
+    pm_dinheiro: 'Cash', pm_pix: 'Pix', pm_transferencia: 'Bank transfer', pm_cartao: 'Card', pm_cheque: 'Check', pm_outro: 'Other',
+    pm_efectivo: 'Cash', pm_bizum: 'Bizum', pm_tarjeta: 'Card', pm_cash: 'Cash',
     servicos_title: 'Services', servicos_subtitle: "Your company's service catalog", servicos_cadastrar: 'Add service',
     servicos_vazio_titulo: 'No services yet', servicos_vazio_subtitulo: 'Add the types of service your company offers.',
     servicos_inativo: 'Inactive', servicos_desativar: 'Deactivate', servicos_ativar: 'Activate',
@@ -1085,6 +1149,7 @@ const ICONS = {
   hammer: '<path d="M15 12l-8.5 8.5a2.12 2.12 0 1 1-3-3L12 9"/><path d="M17.64 15L22 10.64"/><path d="M20.91 11.7l-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91"/>',
   shirt: '<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>',
   receipt: '<path d="M4 2v20l2-1.5L8 22l2-1.5L12 22l2-1.5L16 22l2-1.5L20 22V2l-2 1.5L16 2l-2 1.5L12 2l-2 1.5L8 2 6 3.5 4 2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/>',
+  creditcard: '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>',
 };
 
 // ============================================================
@@ -2659,6 +2724,7 @@ function AdminArea({ profile, onLogout }) {
   const [projectTeam, setProjectTeam] = useState([]);
   const [salaryPayments, setSalaryPayments] = useState([]);
   const [paymentInstallments, setPaymentInstallments] = useState([]);
+  const [paymentMethodEntries, setPaymentMethodEntries] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [noteNotifications, setNoteNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -2684,6 +2750,7 @@ function AdminArea({ profile, onLogout }) {
     const { data: teamData } = await db.from('project_team').select('*').eq('company_id', profile.company_id);
     const { data: salaryData } = await db.from('salary_payments').select('*').eq('company_id', profile.company_id);
     const { data: installmentsData } = await db.from('payment_installments').select('*').eq('company_id', profile.company_id);
+    const { data: methodEntriesData } = await db.from('payment_method_entries').select('*').eq('company_id', profile.company_id);
     const { data: notificationsData } = await db.from('value_change_requests')
       .select('*, employees(full_name), projects(title), project_team(payment_type)')
       .eq('company_id', profile.company_id)
@@ -2700,6 +2767,7 @@ function AdminArea({ profile, onLogout }) {
     setProjectTeam(teamData || []);
     setSalaryPayments(salaryData || []);
     setPaymentInstallments(installmentsData || []);
+    setPaymentMethodEntries(methodEntriesData || []);
     setNotifications(notificationsData || []);
     setNoteNotifications(noteNotifsData || []);
     setCompanyServices(svcData || []);
@@ -2718,6 +2786,7 @@ function AdminArea({ profile, onLogout }) {
     { key: 'equipe', label: t('nav_equipe'), icon: 'users' },
     { key: 'financeiro', label: t('nav_financeiro'), icon: 'euro' },
     { key: 'salarios', label: t('nav_salarios'), icon: 'euro' },
+    { key: 'pagamentos', label: t('nav_pagamentos'), icon: 'creditcard' },
     { key: 'servicos', label: t('nav_servicos'), icon: 'briefcase' },
     { key: 'metragens', label: t('nav_metragens'), icon: 'ruler' },
     { key: 'notas-fiscais', label: t('nav_notas_fiscais'), icon: 'receipt' },
@@ -2920,6 +2989,18 @@ function AdminArea({ profile, onLogout }) {
           companyId={profile.company_id}
           onChanged={loadData}
           onViewHistory={setViewingSalaryEmployee}
+        />
+      )}
+
+      {page === 'pagamentos' && (
+        <PagamentosPage
+          employees={employees}
+          projects={projects}
+          projectTeam={projectTeam}
+          salaryPayments={salaryPayments}
+          paymentMethodEntries={paymentMethodEntries}
+          companyId={profile.company_id}
+          onChanged={loadData}
         />
       )}
 
@@ -3528,6 +3609,247 @@ function SalariosPage({ employees, salaryPayments, projectTeam, projects, compan
           onClose={() => setViewingEmployee(null)}
           onViewFullHistory={() => { setViewingEmployee(null); onViewHistory(viewingEmployee); }}
         />
+      )}
+    </>
+  );
+}
+
+// ============================================================
+// CONFIRMAR PAGAMENTO — data/hora exata + forma(s) de pagamento (com divisão)
+// ============================================================
+function PaymentConfirmModal({ amount, onClose, onConfirm }) {
+  const toLocalInputValue = (d) => {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  const PAYMENT_METHODS = getPaymentMethods();
+  const [when, setWhen] = useState(toLocalInputValue(new Date()));
+  const [methods, setMethods] = useState([{ id: Math.random().toString(36).slice(2), method: PAYMENT_METHODS[0]?.key || '', amount: String(amount) }]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const addMethod = () => setMethods(prev => [...prev, { id: Math.random().toString(36).slice(2), method: PAYMENT_METHODS[0]?.key || '', amount: '' }]);
+  const removeMethod = (id) => setMethods(prev => prev.length > 1 ? prev.filter(m => m.id !== id) : prev);
+  const updateMethod = (id, field, value) => setMethods(prev => prev.map(m => m.id === id ? { ...m, [field]: value } : m));
+
+  const sum = methods.reduce((s, m) => s + (parseFloat(m.amount) || 0), 0);
+  const sumMatches = Math.abs(sum - Number(amount)) < 0.01;
+
+  const handleConfirm = async () => {
+    if (!sumMatches) { setError(t('pag_erro_soma')); return; }
+    setError('');
+    setSaving(true);
+    const paidAtIso = new Date(when).toISOString();
+    await onConfirm({
+      paidAt: paidAtIso,
+      methods: methods.filter(m => m.method && parseFloat(m.amount) > 0).map(m => ({ method: m.method, amount: parseFloat(m.amount) })),
+    });
+    setSaving(false);
+  };
+
+  return (
+    <Modal title={t('pag_modal_title')} onClose={onClose} wide>
+      <div className="space-y-4">
+        <div className="bg-slate-50 rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-sm text-slate-500">{t('pag_valor_total')}</span>
+          <span className="font-mono text-lg font-semibold text-blueprint">{fmtCurrency(amount)}</span>
+        </div>
+        <Input label={t('pag_data_hora')} type="datetime-local" value={when} onChange={e => setWhen(e.target.value)} />
+        <div className="space-y-2">
+          <span className="block text-xs font-medium text-slate-500">{t('pag_forma_pagamento')}</span>
+          {methods.map((m) => (
+            <div key={m.id} className="flex items-center gap-2">
+              <div className="flex-1">
+                <Select value={m.method} onChange={e => updateMethod(m.id, 'method', e.target.value)}>
+                  {PAYMENT_METHODS.map(pm => <option key={pm.key} value={pm.key}>{pm.label}</option>)}
+                </Select>
+              </div>
+              <input type="number" step="0.01" value={m.amount} onChange={e => updateMethod(m.id, 'amount', e.target.value)}
+                placeholder={t('pag_valor_placeholder')}
+                className="w-28 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-blueprint focus:outline-none focus:ring-2 focus:ring-safety/30 focus:border-safety" />
+              {methods.length > 1 && (
+                <button type="button" onClick={() => removeMethod(m.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg flex-shrink-0">
+                  <Icon path={ICONS.x} className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={addMethod} className="text-xs text-safety font-medium hover:underline flex items-center gap-1">
+            <Icon path={ICONS.plus} className="w-3.5 h-3.5" /> {t('pag_adicionar_forma')}
+          </button>
+          <div className={`text-xs ${sumMatches ? 'text-slate-400' : 'text-amber-600 font-medium'}`}>
+            {t('pag_soma_formas')(fmtCurrency(sum))}
+            {!sumMatches && ` · ${t('pag_diferente_total')(fmtCurrency(amount))}`}
+          </div>
+        </div>
+        {error && <div className="text-sm text-red-600">{error}</div>}
+        <div className="flex gap-2 pt-2">
+          <Button onClick={handleConfirm} disabled={saving || !sumMatches} className="flex-1">{saving ? '...' : t('pag_confirmar')}</Button>
+          <Button variant="outline" onClick={onClose}>{t('pag_cancelar')}</Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ============================================================
+// PAGAMENTOS — cards de pagamento a autônomos (por obra) e a
+// funcionários registrados (folha do mês), com data/hora e forma
+// de pagamento registradas no momento da confirmação.
+// ============================================================
+function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paymentMethodEntries, companyId, onChanged }) {
+  const [confirming, setConfirming] = useState(null); // { kind: 'freelance', row } | { kind: 'salary', employee, existing }
+  const monthKey = currentMonthKey();
+  const monthLabel = new Date(monthKey + 'T00:00:00').toLocaleDateString(t('sal_locale'), { month: 'long', year: 'numeric' });
+  const today = new Date().toISOString().slice(0, 10);
+
+  const activeEmployees = employees.filter(e => !e.archived);
+  const freelanceRows = (projectTeam || []).filter(row => {
+    if (row.is_self) return false;
+    const emp = activeEmployees.find(e => e.id === row.employee_id);
+    return emp && emp.employment_type === 'freelance';
+  });
+  const registeredEmployees = activeEmployees.filter(e => e.employment_type === 'registered');
+
+  const methodsFor = (entityType, entityId) => (paymentMethodEntries || []).filter(m => m.entity_type === entityType && m.entity_id === entityId);
+
+  const formatPaidAt = (iso) => iso ? new Date(iso).toLocaleString(_currentCurrency.locale, { dateStyle: 'short', timeStyle: 'short' }) : '';
+
+  const confirmFreelancePayment = async ({ paidAt, methods }) => {
+    const row = confirming.row;
+    await db.from('project_team').update({ payment_status: 'pago', payment_date: paidAt.slice(0, 10), paid_at: paidAt }).eq('id', row.id);
+    if (methods.length > 0) {
+      await db.from('payment_method_entries').insert(methods.map(m => ({ company_id: companyId, entity_type: 'project_team', entity_id: row.id, method: m.method, amount: m.amount })));
+    }
+    setConfirming(null);
+    onChanged();
+  };
+
+  const undoFreelancePayment = async (row) => {
+    await db.from('project_team').update({ payment_status: 'pendente', payment_date: null, paid_at: null }).eq('id', row.id);
+    await db.from('payment_method_entries').delete().eq('entity_type', 'project_team').eq('entity_id', row.id);
+    onChanged();
+  };
+
+  const confirmSalaryPayment = async ({ paidAt, methods }) => {
+    const { employee, existing } = confirming;
+    let rowId = existing?.id;
+    if (!rowId) {
+      const { data } = await db.from('salary_payments').insert({
+        employee_id: employee.id, company_id: companyId, reference_month: monthKey,
+        amount: employee.salary, due_date: dueDateForEmployee(employee), paid: false,
+      }).select().single();
+      rowId = data.id;
+    }
+    await db.from('salary_payments').update({ paid: true, paid_date: paidAt.slice(0, 10), paid_at: paidAt }).eq('id', rowId);
+    if (methods.length > 0) {
+      await db.from('payment_method_entries').insert(methods.map(m => ({ company_id: companyId, entity_type: 'salary_payment', entity_id: rowId, method: m.method, amount: m.amount })));
+    }
+    setConfirming(null);
+    onChanged();
+  };
+
+  const undoSalaryPayment = async (existing) => {
+    if (!existing) return;
+    await db.from('salary_payments').update({ paid: false, paid_date: null, paid_at: null }).eq('id', existing.id);
+    await db.from('payment_method_entries').delete().eq('entity_type', 'salary_payment').eq('entity_id', existing.id);
+    onChanged();
+  };
+
+  const PaymentMethodsChips = ({ entries }) => entries.length === 0 ? null : (
+    <div className="flex flex-wrap gap-1 mt-1.5">
+      {entries.map(en => (
+        <span key={en.id} className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+          {t('pm_' + en.method) || en.method} · {fmtCurrency(en.amount)}
+        </span>
+      ))}
+    </div>
+  );
+
+  return (
+    <>
+      <PageHeader title={t('pag_title')} subtitle={t('pag_subtitle')} />
+
+      <h2 className="font-display font-semibold text-lg mb-4">{t('pag_secao_autonomos')}</h2>
+      {freelanceRows.length === 0 ? (
+        <EmptyState icon="creditcard" title={t('pag_vazio_autonomos')} subtitle="" />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {freelanceRows.map(row => {
+            const emp = activeEmployees.find(e => e.id === row.employee_id);
+            const project = (projects || []).find(p => p.id === row.project_id);
+            const isPaid = row.payment_status === 'pago';
+            const entries = methodsFor('project_team', row.id);
+            return (
+              <div key={row.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="font-display font-semibold text-blueprint">{emp?.full_name}</div>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${isPaid ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-amber-50 text-amber-700 border-amber-300'}`}>
+                    {isPaid ? t('pag_status_pago') : t('pag_status_a_pagar')}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-400 mb-3">{project?.title || '—'}</div>
+                <div className="font-mono text-lg text-blueprint mb-1">{fmtCurrency(row.payment_value)}</div>
+                {isPaid ? (
+                  <>
+                    <div className="text-xs text-slate-400">{t('pag_pago_em')(formatPaidAt(row.paid_at))}</div>
+                    <PaymentMethodsChips entries={entries} />
+                    <button onClick={() => undoFreelancePayment(row)} className="text-xs text-slate-400 hover:text-red-600 mt-2 underline">
+                      {t('pag_desfazer')}
+                    </button>
+                  </>
+                ) : (
+                  <Button className="w-full mt-2" onClick={() => setConfirming({ kind: 'freelance', row })}>{t('pag_marcar_pago')}</Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <h2 className="font-display font-semibold text-lg mb-4">{t('pag_secao_funcionarios')(monthLabel)}</h2>
+      {registeredEmployees.length === 0 ? (
+        <EmptyState icon="creditcard" title={t('pag_vazio_funcionarios')} subtitle="" />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {registeredEmployees.map(emp => {
+            const existing = salaryPayments.find(s => s.employee_id === emp.id && s.reference_month === monthKey);
+            const isPaid = !!existing?.paid;
+            const dueDate = existing?.due_date || dueDateForEmployee(emp);
+            const isLate = !isPaid && dueDate < today;
+            const entries = existing ? methodsFor('salary_payment', existing.id) : [];
+            const statusLabel = isPaid ? t('pag_status_pago') : (isLate ? t('pag_status_atrasado') : t('pag_status_a_pagar'));
+            const statusClasses = isPaid ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : isLate ? 'bg-red-50 text-red-700 border-red-300' : 'bg-amber-50 text-amber-700 border-amber-300';
+            return (
+              <div key={emp.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="font-display font-semibold text-blueprint">{emp.full_name}</div>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${statusClasses}`}>{statusLabel}</span>
+                </div>
+                <div className="text-xs text-slate-400 mb-3">{t('pag_dia')(emp.payment_day || 1)}</div>
+                <div className="font-mono text-lg text-blueprint mb-1">{fmtCurrency(emp.salary)}</div>
+                {isPaid ? (
+                  <>
+                    <div className="text-xs text-slate-400">{t('pag_pago_em')(formatPaidAt(existing.paid_at))}</div>
+                    <PaymentMethodsChips entries={entries} />
+                    <button onClick={() => undoSalaryPayment(existing)} className="text-xs text-slate-400 hover:text-red-600 mt-2 underline">
+                      {t('pag_desfazer')}
+                    </button>
+                  </>
+                ) : (
+                  <Button className="w-full mt-2" onClick={() => setConfirming({ kind: 'salary', employee: emp, existing })}>{t('pag_marcar_pago')}</Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {confirming?.kind === 'freelance' && (
+        <PaymentConfirmModal amount={confirming.row.payment_value} onClose={() => setConfirming(null)} onConfirm={confirmFreelancePayment} />
+      )}
+      {confirming?.kind === 'salary' && (
+        <PaymentConfirmModal amount={confirming.employee.salary} onClose={() => setConfirming(null)} onConfirm={confirmSalaryPayment} />
       )}
     </>
   );
