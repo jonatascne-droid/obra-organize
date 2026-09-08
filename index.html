@@ -435,6 +435,7 @@ const UI_TEXT = {
     efm_telefone: 'Telefone', efm_endereco: 'Endereço / localização', efm_endereco_ph: 'Cidade, bairro...',
     efm_tipo_vinculo: 'Tipo de vínculo', efm_freelance_opt: 'Freelance / Autônomo', efm_registrado_opt: 'Registrado',
     efm_salario_mensal_curr: (s) => `Salário mensal (${s})`, efm_dia_pagamento: 'Dia de pagamento',
+    efm_data_inicio: 'Data de início', efm_data_primeiro_salario: 'Data do primeiro salário',
     efm_salvar_alteracoes: 'Salvar alterações',
     ndm_title: 'Solicitação de alteração de valor',
     ndm_colaborador: 'Colaborador:', ndm_obra: 'Obra:', ndm_tipo: 'Tipo:',
@@ -738,6 +739,7 @@ const UI_TEXT = {
     efm_telefone: 'Teléfono', efm_endereco: 'Dirección / ubicación', efm_endereco_ph: 'Ciudad, barrio...',
     efm_tipo_vinculo: 'Tipo de vínculo', efm_freelance_opt: 'Autónomo', efm_registrado_opt: 'Contratado',
     efm_salario_mensal_curr: (s) => `Salario mensual (${s})`, efm_dia_pagamento: 'Día de pago',
+    efm_data_inicio: 'Fecha de inicio', efm_data_primeiro_salario: 'Fecha del primer salario',
     efm_salvar_alteracoes: 'Guardar cambios',
     ndm_title: 'Solicitud de cambio de valor',
     ndm_colaborador: 'Colaborador:', ndm_obra: 'Obra:', ndm_tipo: 'Tipo:',
@@ -1041,6 +1043,7 @@ const UI_TEXT = {
     efm_telefone: 'Phone', efm_endereco: 'Address / location', efm_endereco_ph: 'City, neighborhood...',
     efm_tipo_vinculo: 'Employment type', efm_freelance_opt: 'Freelance', efm_registrado_opt: 'Employee',
     efm_salario_mensal_curr: (s) => `Monthly salary (${s})`, efm_dia_pagamento: 'Payment day',
+    efm_data_inicio: 'Start date', efm_data_primeiro_salario: 'First salary date',
     efm_salvar_alteracoes: 'Save changes',
     ndm_title: 'Value change request',
     ndm_colaborador: 'Team member:', ndm_obra: 'Project:', ndm_tipo: 'Type:',
@@ -3160,6 +3163,7 @@ function EmployeeFormModal({ employee, onClose, onSaved }) {
     age: employee?.age || '', address: employee?.address || '', phone: employee?.phone || '',
     employment_type: employee?.employment_type || 'freelance',
     salary: employee?.salary || '', payment_day: employee?.payment_day || '',
+    start_date: employee?.start_date || '', first_salary_date: employee?.first_salary_date || '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -3203,6 +3207,8 @@ function EmployeeFormModal({ employee, onClose, onSaved }) {
         p_payment_day: form.employment_type === 'registered' && form.payment_day ? parseInt(form.payment_day) : null,
         p_email: form.email !== employeeEmail ? form.email : null,
         p_password: form.password || null,
+        p_start_date: form.employment_type === 'registered' && form.start_date ? form.start_date : null,
+        p_first_salary_date: form.employment_type === 'registered' && form.first_salary_date ? form.first_salary_date : null,
       });
       if (error) { setError(error.message); setSaving(false); return; }
       onSaved();
@@ -3219,6 +3225,8 @@ function EmployeeFormModal({ employee, onClose, onSaved }) {
       p_employment_type: form.employment_type,
       p_salary: form.employment_type === 'registered' && form.salary ? parseFloat(form.salary) : null,
       p_payment_day: form.employment_type === 'registered' && form.payment_day ? parseInt(form.payment_day) : null,
+      p_start_date: form.employment_type === 'registered' && form.start_date ? form.start_date : null,
+      p_first_salary_date: form.employment_type === 'registered' && form.first_salary_date ? form.first_salary_date : null,
     });
     if (error) { setError(error.message); setSaving(false); return; }
     onSaved();
@@ -3257,6 +3265,8 @@ function EmployeeFormModal({ employee, onClose, onSaved }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
             <Input label={t('efm_salario_mensal_curr')(currentCurrencySymbol())} type="number" step="0.01" required value={form.salary} onChange={set('salary')} placeholder="0,00" />
             <Input label={t('efm_dia_pagamento')} type="number" min="1" max="31" required value={form.payment_day} onChange={set('payment_day')} placeholder="Ex: 5" />
+            <Input label={t('efm_data_inicio')} type="date" value={form.start_date} onChange={set('start_date')} />
+            <Input label={t('efm_data_primeiro_salario')} type="date" value={form.first_salary_date} onChange={set('first_salary_date')} />
           </div>
         )}
         {error && <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{error}</div>}
@@ -3348,6 +3358,17 @@ function dueDateForEmployee(emp) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
+// Se o colaborador ainda não tem nenhum salário registrado e tem uma data de
+// primeiro salário definida manualmente (útil quando o início não cai certinho
+// no ciclo normal de pagamento), usa ela em vez do dia de pagamento padrão.
+function nextSalaryDueInfo(emp, salaryPayments) {
+  const hasHistory = (salaryPayments || []).some(s => s.employee_id === emp.id);
+  if (!hasHistory && emp.first_salary_date) {
+    return { due_date: emp.first_salary_date, reference_month: emp.first_salary_date.slice(0, 7) + '-01' };
+  }
+  return { due_date: dueDateForEmployee(emp), reference_month: currentMonthKey() };
+}
+
 function SalariosPage({ employees, salaryPayments, projectTeam, projects, companyId, onChanged, onViewHistory }) {
   const [viewingEmployee, setViewingEmployee] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -3368,9 +3389,10 @@ function SalariosPage({ employees, salaryPayments, projectTeam, projects, compan
       const newPaid = !current.paid;
       await db.from('salary_payments').update({ paid: newPaid, paid_date: newPaid ? new Date().toISOString().slice(0, 10) : null }).eq('id', current.id);
     } else {
+      const { due_date, reference_month } = nextSalaryDueInfo(emp, salaryPayments);
       await db.from('salary_payments').insert({
-        employee_id: emp.id, company_id: companyId, reference_month: monthKey,
-        amount: emp.salary, due_date: dueDateForEmployee(emp), paid: true, paid_date: new Date().toISOString().slice(0, 10),
+        employee_id: emp.id, company_id: companyId, reference_month,
+        amount: emp.salary, due_date, paid: true, paid_date: new Date().toISOString().slice(0, 10),
       });
     }
     onChanged();
@@ -3735,9 +3757,10 @@ function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paym
     const { employee, existing } = confirming;
     let rowId = existing?.id;
     if (!rowId) {
+      const { due_date, reference_month } = nextSalaryDueInfo(employee, salaryPayments);
       const { data } = await db.from('salary_payments').insert({
-        employee_id: employee.id, company_id: companyId, reference_month: monthKey,
-        amount: employee.salary, due_date: dueDateForEmployee(employee), paid: false,
+        employee_id: employee.id, company_id: companyId, reference_month,
+        amount: employee.salary, due_date, paid: false,
       }).select().single();
       rowId = data.id;
     }
