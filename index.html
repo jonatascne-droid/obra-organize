@@ -5300,21 +5300,47 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
     }));
 
     if (isEdit) {
-      // In edit mode: update payment values for existing team rows
+      // Reconcilia a equipe: atualiza quem já estava e continua, insere quem foi
+      // adicionado agora e remove quem foi desmarcado — preservando o id (e o
+      // histórico de pagamento) de quem permanece, em vez de apagar tudo e recriar.
+      const { data: existingTeamRows } = await db.from('project_team').select('*').eq('project_id', editingProject.id);
+      const existingByKey = {};
+      (existingTeamRows || []).forEach(row => { existingByKey[row.is_self ? 'self' : row.employee_id] = row; });
+
+      const toRemove = (existingTeamRows || []).filter(row => !((row.is_self ? 'self' : row.employee_id) in selectedTeam));
+      if (toRemove.length > 0) {
+        await db.from('payment_method_entries').delete().eq('entity_type', 'project_team').in('entity_id', toRemove.map(r => r.id));
+        await db.from('project_team').delete().in('id', toRemove.map(r => r.id));
+      }
+
       for (const [key, info] of Object.entries(selectedTeam)) {
-        if (key === 'self') continue; // self row has no payment value to update
+        const existing = existingByKey[key];
+        if (key === 'self') {
+          if (!existing) {
+            await db.from('project_team').insert({
+              project_id: project.id, employee_id: null, admin_profile_id: profile.id, is_self: true,
+              company_id: companyId, payment_type: 'self', payment_value: 0, payment_status: 'pendente',
+            });
+          }
+          continue; // self não tem valor de pagamento pra atualizar
+        }
         const newPaymentValue = info.payment_value ? parseFloat(info.payment_value) : 0;
         const newDailyRate = info.payment_type === 'diaria' && info.daily_rate ? parseFloat(info.daily_rate) : null;
         const newNumDays = info.payment_type === 'diaria' && info.num_days ? parseInt(info.num_days) : null;
-        await db.from('project_team')
-          .update({
+        if (existing) {
+          await db.from('project_team').update({
             payment_type: info.payment_type,
             payment_value: newPaymentValue,
             daily_rate: newDailyRate,
             num_days: newNumDays,
-          })
-          .eq('project_id', project.id)
-          .eq('employee_id', key);
+          }).eq('id', existing.id);
+        } else {
+          await db.from('project_team').insert({
+            project_id: project.id, employee_id: key, company_id: companyId, is_self: false,
+            payment_type: info.payment_type, payment_value: newPaymentValue,
+            daily_rate: newDailyRate, num_days: newNumDays, payment_status: 'pendente',
+          });
+        }
       }
     } else if (teamRows.length > 0) {
       const { error: teamError } = await db.from('project_team').insert(teamRows);
