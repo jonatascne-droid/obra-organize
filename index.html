@@ -150,6 +150,24 @@ const currentCountryCode = () => {
   const entry = Object.entries(CURRENCY_BY_COUNTRY).find(([, c]) => c === _currentCurrency);
   return entry ? entry[0] : 'ES';
 };
+// Cálculo do imposto no orçamento, quando "repassar ao cliente" está ligado — a forma de
+// calcular muda por país porque a alíquota tem significados diferentes em cada um:
+// BR: o percentual (ISS/Simples) representa a fatia do TOTAL cobrado do cliente, então o
+// imposto é calculado "por dentro" (gross-up: total = valor / (1 - taxa)).
+// ES (IVA) e US (sales tax): o percentual é somado por fora, em cima do valor real do
+// serviço (total = valor + valor * taxa) — é assim que esses impostos funcionam de fato.
+const computeServiceTax = (serviceValue, taxRateValue, taxPassedOn) => {
+  const rateFraction = (taxRateValue || 0) / 100;
+  if (!taxPassedOn) {
+    return { total: serviceValue, taxAmount: serviceValue * rateFraction };
+  }
+  if (currentCountryCode() === 'BR') {
+    const total = rateFraction < 1 ? serviceValue / (1 - rateFraction) : serviceValue;
+    return { total, taxAmount: total - serviceValue };
+  }
+  const taxAmount = serviceValue * rateFraction;
+  return { total: serviceValue + taxAmount, taxAmount };
+};
 // Formas de pagamento sugeridas por país — inclui os meios mais usados localmente
 // (Bizum na Espanha, Pix no Brasil) além das opções genéricas.
 const PAYMENT_METHODS_BY_COUNTRY = {
@@ -448,6 +466,7 @@ const UI_TEXT = {
     cfm_pais_atuacao: 'País de atuação',
     cfm_pais_atuacao_desc: 'define o idioma de todo o sistema, do PDF, e a estimativa de imposto do orçamento',
     cfm_confirmar_trocar_pais: 'Ao trocar o país, o idioma dos orçamentos em PDF e a estimativa de imposto atual serão desativados e passam a seguir as regras do novo país. Deseja continuar?',
+    cfm_eua_em_desenvolvimento: 'Estados Unidos ainda está em desenvolvimento e não pode ser selecionado no momento.',
     cfm_estados_unidos: 'Estados Unidos', cfm_sistema_ingles: 'Sistema em inglês',
     cfm_espanha: 'Espanha', cfm_sistema_espanhol: 'Sistema em espanhol',
     cfm_brasil: 'Brasil', cfm_sistema_portugues: 'Sistema em português',
@@ -783,6 +802,7 @@ const UI_TEXT = {
     cfm_pais_atuacao: 'País de actuación',
     cfm_pais_atuacao_desc: 'define el idioma de todo el sistema, del PDF, y la estimación de impuesto del presupuesto',
     cfm_confirmar_trocar_pais: 'Al cambiar el país, el idioma de los presupuestos en PDF y la estimación de impuesto actual se desactivarán y pasarán a seguir las reglas del nuevo país. ¿Deseas continuar?',
+    cfm_eua_em_desenvolvimento: 'Estados Unidos todavía está en desarrollo y no se puede seleccionar por el momento.',
     cfm_estados_unidos: 'Estados Unidos', cfm_sistema_ingles: 'Sistema en inglés',
     cfm_espanha: 'España', cfm_sistema_espanhol: 'Sistema en español',
     cfm_brasil: 'Brasil', cfm_sistema_portugues: 'Sistema en portugués',
@@ -1118,6 +1138,7 @@ const UI_TEXT = {
     cfm_pais_atuacao: 'Country of operation',
     cfm_pais_atuacao_desc: 'defines the language of the whole system, the PDF, and the budget tax estimate',
     cfm_confirmar_trocar_pais: 'Changing the country will disable the current PDF budget language and tax estimate, switching them to follow the new country\'s rules. Do you want to continue?',
+    cfm_eua_em_desenvolvimento: 'The United States is still under development and cannot be selected right now.',
     cfm_estados_unidos: 'United States', cfm_sistema_ingles: 'System in English',
     cfm_espanha: 'Spain', cfm_sistema_espanhol: 'System in Spanish',
     cfm_brasil: 'Brazil', cfm_sistema_portugues: 'System in Portuguese',
@@ -1669,6 +1690,7 @@ const LANDING_TEXT = {
     genericErr: 'Error signing up. Please try again.',
     loading: 'Loading...',
     devBy: 'System developed by', devByQuestion: 'Want to build your own system? Contact us:',
+    usComingSoon: 'The United States is still under development and cannot be selected right now.',
   },
   pt: {
     login: 'Já tenho conta · Entrar',
@@ -1715,6 +1737,7 @@ const LANDING_TEXT = {
     genericErr: 'Erro ao cadastrar. Tente novamente.',
     loading: 'Carregando...',
     devBy: 'Sistema desenvolvido pela', devByQuestion: 'Quer desenvolver seu próprio sistema? Entre em contato:',
+    usComingSoon: 'Estados Unidos ainda está em desenvolvimento e não pode ser selecionado no momento.',
   },
   es: {
     login: '¿Ya tienes cuenta? · Iniciar sesión',
@@ -1761,6 +1784,7 @@ const LANDING_TEXT = {
     genericErr: 'Error al registrar. Inténtalo de nuevo.',
     loading: 'Cargando...',
     devBy: 'Sistema desarrollado por', devByQuestion: '¿Quieres desarrollar tu propio sistema? Contáctanos:',
+    usComingSoon: 'Estados Unidos todavía está en desarrollo y no se puede seleccionar por el momento.',
   },
 };
 
@@ -1770,7 +1794,7 @@ function LandingPage({ onBackToLogin, mode = 'generic' }) {
   const t = LANDING_TEXT[locale];
   const forcedCountry = mode === 'br' ? 'BR' : mode === 'es' ? 'ES' : mode === 'us' ? 'US' : null;
 
-  const [country, setCountry] = useState(forcedCountry || 'US');
+  const [country, setCountry] = useState(forcedCountry || 'ES');
   const [showSignup, setShowSignup] = useState(false);
   const [form, setForm] = useState({ company_name: '', contact_name: '', email: '', phone: '', password: '' });
   const [saving, setSaving] = useState(false);
@@ -1809,6 +1833,14 @@ function LandingPage({ onBackToLogin, mode = 'generic' }) {
   }, [mode]);
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const selectCountry = (code) => {
+    if (code === 'US') {
+      alert(t.usComingSoon);
+      return;
+    }
+    setCountry(code);
+  };
 
   const period = locale === 'en' ? '/mo' : locale === 'es' ? '/mes' : '/mês';
   const ALL_PLANS = [
@@ -1974,7 +2006,7 @@ function LandingPage({ onBackToLogin, mode = 'generic' }) {
                   </li>
                 ))}
               </ul>
-              <Button className="w-full" onClick={() => { setCountry(p.code); setShowSignup(true); }}>{t.subscribeTo(p)}</Button>
+              <Button className="w-full" onClick={() => { if (p.code === 'US') { alert(t.usComingSoon); return; } setCountry(p.code); setShowSignup(true); }}>{t.subscribeTo(p)}</Button>
             </div>
           ))}
         </div>
@@ -2010,7 +2042,7 @@ function LandingPage({ onBackToLogin, mode = 'generic' }) {
               ) : (
                 <div className="grid grid-cols-3 gap-2">
                   {plans.map(p => (
-                    <button key={p.code} type="button" onClick={() => setCountry(p.code)}
+                    <button key={p.code} type="button" onClick={() => selectCountry(p.code)}
                       className={`px-2 py-3 rounded-xl border-2 font-medium text-xs transition-colors ${country === p.code ? 'border-safety bg-safety/5 text-safety' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
                       {p.name} · {p.price}{p.period}
                     </button>
@@ -2670,6 +2702,10 @@ function CompanyFormModal({ company, onClose, onSaved }) {
   // regra do país novo — por isso, se já for uma empresa existente com dados, confirma antes.
   const handleCountryClick = (code) => {
     if (code === country) return;
+    if (code === 'US') {
+      alert(t('cfm_eua_em_desenvolvimento'));
+      return;
+    }
     if (isEdit) {
       const ok = confirm(t('cfm_confirmar_trocar_pais'));
       if (!ok) return;
@@ -4380,13 +4416,9 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
     let newTotal = newServiceValue;
     let newTaxAmount = null;
     if (newTaxRate != null && !isNaN(newTaxRate)) {
-      const rateFraction = newTaxRate / 100;
-      if (project.tax_passed_on) {
-        newTotal = rateFraction < 1 ? newServiceValue / (1 - rateFraction) : newServiceValue;
-        newTaxAmount = newTotal - newServiceValue;
-      } else {
-        newTaxAmount = newServiceValue * rateFraction;
-      }
+      const result = computeServiceTax(newServiceValue, newTaxRate, project.tax_passed_on);
+      newTotal = result.total;
+      newTaxAmount = result.taxAmount;
     }
     if (installments.length > 0 && !confirm(t('fpm_confirmar_editar'))) {
       return;
@@ -5254,15 +5286,14 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
   const serviceValue = anyServiceSelected ? totalFromServices : (parseFloat(form.budget) || 0);
   const hasTaxRate = company?.tax_rate != null && company.tax_rate !== '';
   const taxRateValue = hasTaxRate ? parseFloat(company.tax_rate) : 0;
-  const taxRateFraction = taxRateValue / 100;
   // Modo "empresa absorve": informativo apenas — total cobrado continua sendo o valor do serviço,
   // o imposto é só uma estimativa do quanto sai desse valor.
-  const absorbTaxAmount = hasTaxRate ? serviceValue * taxRateFraction : 0;
+  const absorbTaxAmount = hasTaxRate ? computeServiceTax(serviceValue, taxRateValue, false).taxAmount : 0;
   const absorbNetValue = serviceValue - absorbTaxAmount;
-  // Modo "repassar ao cliente": o valor do serviço precisa sobrar intacto pra empresa, então o
-  // imposto é calculado "por dentro" (gross-up) — dividindo em vez de somar direto.
-  const passOnGrandTotal = hasTaxRate && taxRateFraction < 1 ? serviceValue / (1 - taxRateFraction) : serviceValue;
-  const passOnTaxAmount = passOnGrandTotal - serviceValue;
+  // Modo "repassar ao cliente": ver computeServiceTax() — a forma de calcular muda por país.
+  const passOnResult = hasTaxRate ? computeServiceTax(serviceValue, taxRateValue, true) : { total: serviceValue, taxAmount: 0 };
+  const passOnGrandTotal = passOnResult.total;
+  const passOnTaxAmount = passOnResult.taxAmount;
 
   const taxAmount = taxPassedOn ? passOnTaxAmount : 0;
   const grandTotal = taxPassedOn ? passOnGrandTotal : serviceValue;
@@ -7010,13 +7041,9 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
     let newTotal = newServiceValue;
     let newTaxAmount = null;
     if (project.tax_rate_snapshot) {
-      const rateFraction = project.tax_rate_snapshot / 100;
-      if (project.tax_passed_on) {
-        newTotal = rateFraction < 1 ? newServiceValue / (1 - rateFraction) : newServiceValue;
-        newTaxAmount = newTotal - newServiceValue;
-      } else {
-        newTaxAmount = newServiceValue * rateFraction;
-      }
+      const result = computeServiceTax(newServiceValue, project.tax_rate_snapshot, project.tax_passed_on);
+      newTotal = result.total;
+      newTaxAmount = result.taxAmount;
     }
     if (installments.length > 0 && !confirm(t('pd_confirmar_editar_valor'))) {
       return;
