@@ -6124,7 +6124,10 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
       const dy = wy - w.y;
       const lx = dx * Math.cos(-angle) - dy * Math.sin(-angle);
       const ly = dx * Math.sin(-angle) + dy * Math.cos(-angle);
-      if (Math.abs(lx) < len/2 + 0.1 && Math.abs(ly) < thick/2 + 0.1) return i;
+      // Tolerância em pixels de tela (não em metros fixos) pra ficar fácil de tocar com o dedo
+      // em qualquer nível de zoom, sem afetar a precisão de quem usa mouse.
+      const tolerance = 14 / s.zoom;
+      if (Math.abs(lx) < len/2 + tolerance && Math.abs(ly) < thick/2 + tolerance) return i;
     }
     return null;
   };
@@ -6137,23 +6140,28 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
     const { start, end } = wallEndpoints(w);
     const sx = s.panX + start[0] * s.zoom, sy = s.panY + start[1] * s.zoom;
     const ex = s.panX + end[0] * s.zoom, ey = s.panY + end[1] * s.zoom;
-    if (Math.hypot(mx - sx, my - sy) < 10) return 'start';
-    if (Math.hypot(mx - ex, my - ey) < 10) return 'end';
+    // Raio maior que os 10px originais pra dar pra pegar a ponta com o dedo no celular.
+    const handleRadius = 18;
+    if (Math.hypot(mx - sx, my - sy) < handleRadius) return 'start';
+    if (Math.hypot(mx - ex, my - ey) < handleRadius) return 'end';
     return null;
   };
 
-  const getCanvasPos = (e) => {
+  const getPosFromClient = (clientX, clientY) => {
     const rect = canvasRef.current.getBoundingClientRect();
-    return [(e.clientX - rect.left), (e.clientY - rect.top)];
+    return [(clientX - rect.left), (clientY - rect.top)];
   };
+
+  const getCanvasPos = (e) => getPosFromClient(e.clientX, e.clientY);
 
   const canvasToWorld = (cx, cy) => {
     const s = stateRef.current;
     return [(cx - s.panX) / s.zoom, (cy - s.panY) / s.zoom];
   };
 
-  const onMouseDown = (e) => {
-    const [mx, my] = getCanvasPos(e);
+  const onMouseDown = (e) => handlePointerDown(...getCanvasPos(e));
+
+  const handlePointerDown = (mx, my) => {
     const s = stateRef.current;
 
     // 1) Arrastar uma ponta da parede selecionada?
@@ -6206,8 +6214,9 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
     s.dragging = { type: 'pan', startX: mx, startY: my, origPanX: s.panX, origPanY: s.panY };
   };
 
-  const onMouseMove = (e) => {
-    const [mx, my] = getCanvasPos(e);
+  const onMouseMove = (e) => handlePointerMove(...getCanvasPos(e));
+
+  const handlePointerMove = (mx, my) => {
     const s = stateRef.current;
 
     // Arrastando uma ponta: recalcula ângulo e comprimento mantendo a outra ponta fixa
@@ -6302,7 +6311,9 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
     draw();
   };
 
-  const onMouseUp = () => {
+  const onMouseUp = () => handlePointerUp();
+
+  const handlePointerUp = () => {
     const s = stateRef.current;
     s.dragging = null;
     s.draggingEndpoint = null;
@@ -6320,6 +6331,71 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
     setZoom(newZoom);
     draw();
   };
+
+  // Suporte a toque (celular/tablet): um dedo seleciona/arrasta parede ou cômodo e faz pan,
+  // igual ao mouse; dois dedos fazem pinch-to-zoom. Os listeners são adicionados manualmente
+  // com passive:false (em vez de onTouchStart/onTouchMove do React) porque o React 18 registra
+  // os handlers de toque do JSX como passivos — preventDefault() neles não bloqueia o scroll da
+  // página, o que faria o dedo rolar a tela em vez de desenhar no canvas.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const s = stateRef.current;
+    let pinch = null;
+
+    const touchPos = (t) => getPosFromClient(t.clientX, t.clientY);
+    const pinchDist = (t1, t2) => {
+      const [x1, y1] = touchPos(t1);
+      const [x2, y2] = touchPos(t2);
+      return { dist: Math.hypot(x2 - x1, y2 - y1), midX: (x1 + x2) / 2, midY: (y1 + y2) / 2 };
+    };
+
+    const onTouchStart = (e) => {
+      e.preventDefault();
+      if (e.touches.length === 2) {
+        s.dragging = null;
+        s.draggingEndpoint = null;
+        const { dist, midX, midY } = pinchDist(e.touches[0], e.touches[1]);
+        pinch = { startDist: dist, startZoom: s.zoom, midX, midY, startPanX: s.panX, startPanY: s.panY };
+      } else if (e.touches.length === 1) {
+        pinch = null;
+        const [mx, my] = touchPos(e.touches[0]);
+        handlePointerDown(mx, my);
+      }
+    };
+
+    const onTouchMove = (e) => {
+      e.preventDefault();
+      if (e.touches.length === 2 && pinch) {
+        const { dist } = pinchDist(e.touches[0], e.touches[1]);
+        const newZoom = Math.min(300, Math.max(15, pinch.startZoom * (dist / pinch.startDist)));
+        s.panX = pinch.midX - (pinch.midX - pinch.startPanX) * (newZoom / pinch.startZoom);
+        s.panY = pinch.midY - (pinch.midY - pinch.startPanY) * (newZoom / pinch.startZoom);
+        s.zoom = newZoom;
+        setZoom(newZoom);
+        draw();
+      } else if (e.touches.length === 1) {
+        const [mx, my] = touchPos(e.touches[0]);
+        handlePointerMove(mx, my);
+      }
+    };
+
+    const onTouchEnd = (e) => {
+      if (e.touches.length < 2) pinch = null;
+      if (e.touches.length === 0) handlePointerUp();
+    };
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+    canvas.addEventListener('touchcancel', onTouchEnd, { passive: false });
+    return () => {
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
+      canvas.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, []);
 
   const addWall = () => {
     if (!newWall.length) return;
@@ -6560,7 +6636,7 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
           {/* Canvas */}
           <div className="flex-1 relative overflow-hidden bg-slate-50 cursor-crosshair select-none">
             <canvas ref={canvasRef}
-              style={{ width: '100%', height: '100%', display: 'block', cursor: 'crosshair' }}
+              style={{ width: '100%', height: '100%', display: 'block', cursor: 'crosshair', touchAction: 'none' }}
               onMouseDown={onMouseDown}
               onMouseMove={onMouseMove}
               onMouseUp={onMouseUp}
