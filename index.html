@@ -337,6 +337,7 @@ const UI_TEXT = {
     sb_cadastre_personalizado: 'Cadastre serviços personalizados na aba Serviços',
     sb_sem_servico_cadastrado: 'Nenhum serviço cadastrado. Cadastre um serviço na aba Serviços antes de continuar.',
     pf_obra_sem_titulo: 'Obra sem título',
+    pf_servico_sem_metodo: 'Selecione a forma de cobrança (m², unidade, diária, hora, empreita ou valor livre) de todos os serviços adicionados antes de salvar.',
     sb_metodo_orcar: 'Método para orçar...',
     pf_title_editar: 'Editar obra', pf_title_nova: 'Cadastrar obra',
     pf_nome_obra: 'Nome da obra', pf_nome_obra_ph: 'Ex: Reforma Apartamento Centro',
@@ -673,6 +674,7 @@ const UI_TEXT = {
     sb_cadastre_personalizado: 'Registra servicios personalizados en la pestaña Servicios',
     sb_sem_servico_cadastrado: 'Ningún servicio registrado. Registra un servicio en la pestaña Servicios antes de continuar.',
     pf_obra_sem_titulo: 'Obra sin título',
+    pf_servico_sem_metodo: 'Selecciona la forma de cobro (m², unidad, jornal, hora, ajuste alzado o valor libre) de todos los servicios añadidos antes de guardar.',
     sb_metodo_orcar: 'Método para presupuestar...',
     pf_title_editar: 'Editar obra', pf_title_nova: 'Registrar obra',
     pf_nome_obra: 'Nombre de la obra', pf_nome_obra_ph: 'Ej: Reforma Apartamento Centro',
@@ -1009,6 +1011,7 @@ const UI_TEXT = {
     sb_cadastre_personalizado: 'Add custom services in the Services tab',
     sb_sem_servico_cadastrado: 'No service registered. Register a service in the Services tab before continuing.',
     pf_obra_sem_titulo: 'Untitled project',
+    pf_servico_sem_metodo: 'Select the pricing method (m², unit, daily rate, hourly rate, fixed price, or free amount) for every service added before saving.',
     sb_metodo_orcar: 'Pricing method...',
     pf_title_editar: 'Edit project', pf_title_nova: 'New project',
     pf_nome_obra: 'Project name', pf_nome_obra_ph: 'E.g: Downtown Apartment Remodel',
@@ -5347,6 +5350,15 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
 
     const finalBudget = anyServiceSelected ? grandTotal : (form.budget ? grandTotal : null);
     const usedServices = services.filter(s => s.service_type || s.service_name);
+
+    // Um serviço selecionado mas sem forma de cobrança escolhida não pode ser salvo (o banco
+    // exige um método válido) — barra o envio aqui, ANTES de mexer no banco, pra não apagar
+    // os serviços antigos (no modo edição) e falhar ao tentar inserir os novos.
+    if (usedServices.some(s => !s.pricing_method)) {
+      setError(t('pf_servico_sem_metodo'));
+      setSaving(false);
+      return;
+    }
 
     // Nome, tipo de serviço e equipe são os 3 dados que definem se a obra está completa.
     // Faltando qualquer um deles, a obra é salva como rascunho em vez de bloquear o cadastro.
