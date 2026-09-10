@@ -7613,45 +7613,17 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
           </div>
         )}
 
-        {descriptions.length > 0 && (
-          <div className="space-y-3">
-            {descriptions.map((desc, i) => {
-              const files = typeof desc.files === 'string' ? JSON.parse(desc.files) : (desc.files || []);
-              return (
-                <div key={desc.id} className="bg-slate-50 rounded-xl p-4 space-y-2">
-                  {desc.title && <div className="text-xs font-semibold text-blueprint">{desc.title}</div>}
-                  {desc.body && <div className="text-sm text-slate-600">{desc.body}</div>}
-                  {files.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {files.map(f => (
-                        f.type?.startsWith('image/') ? (
-                          <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer">
-                            <img src={f.url} alt={f.name} className="w-24 h-24 object-cover rounded-lg border border-slate-200 hover:opacity-80 transition-opacity" />
-                          </a>
-                        ) : (
-                          <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-slate-200 text-xs text-blueprint hover:border-safety/40 transition-colors">
-                            <Icon path={ICONS.upload} className="w-3.5 h-3.5 text-slate-400" />
-                            {f.name}
-                          </a>
-                        )
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         {services.length > 0 && (
           <div>
             <h4 className="font-display font-semibold text-sm mb-2">{t('pd_servicos_desta_obra')}</h4>
             <div className="space-y-2">
-              {services.map(s => (
+              {services.map(s => {
+                const svcName = s.service_name || getServiceTypes()[s.service_type] || s.service_type || '';
+                const svcDescs = descriptions.filter(d => d.project_service_id === s.id);
+                return (
                 <div key={s.id} className="bg-slate-50 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-1">
-                    <div className="text-sm text-blueprint font-medium">{getServiceTypes()[s.service_type]}</div>
+                    <div className="text-sm text-blueprint font-medium">{svcName}</div>
                     <div className="font-mono text-sm font-semibold text-safety">{fmtCurrency(s.subtotal)}</div>
                   </div>
                   {s.pricing_method === 'm2' && s.area_m2 != null && (
@@ -7667,8 +7639,39 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
                       <span>{t('pd_valor_unidade')}: <span className="font-mono text-blueprint">{fmtCurrency(s.price_per_unit)}</span></span>
                     </div>
                   )}
+                  {svcDescs.length > 0 && (
+                    <div className="space-y-2 mt-3">
+                      {svcDescs.map(desc => {
+                        const files = typeof desc.files === 'string' ? JSON.parse(desc.files) : (desc.files || []);
+                        return (
+                          <div key={desc.id} className="bg-white border border-slate-100 rounded-xl p-3 space-y-2">
+                            {desc.title && <div className="text-xs font-semibold text-blueprint">{desc.title}</div>}
+                            {desc.body && <div className="text-sm text-slate-600">{desc.body}</div>}
+                            {files.length > 0 && (
+                              <div className="flex flex-wrap gap-2 pt-1">
+                                {files.map(f => (
+                                  f.type?.startsWith('image/') ? (
+                                    <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer">
+                                      <img src={f.url} alt={f.name} className="w-24 h-24 object-cover rounded-lg border border-slate-200 hover:opacity-80 transition-opacity" />
+                                    </a>
+                                  ) : (
+                                    <a key={f.url} href={f.url} target="_blank" rel="noopener noreferrer"
+                                      className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200 text-xs text-blueprint hover:border-safety/40 transition-colors">
+                                      <Icon path={ICONS.upload} className="w-3.5 h-3.5 text-slate-400" />
+                                      {f.name}
+                                    </a>
+                                  )
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
