@@ -179,6 +179,23 @@ const getPaymentMethods = () => (PAYMENT_METHODS_BY_COUNTRY[currentCountryCode()
   .map(key => ({ key, label: t('pm_' + key) }));
 const fmtDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-PT') : '—';
 
+// Traduz erros técnicos do banco/rede pra mensagens que o cliente final entende. Muitas
+// operações já lançam uma exceção com texto amigável (ex: "Já existe uma conta com este
+// e-mail", escrito à mão nas funções do banco) — nesse caso o texto original é mantido.
+// Só troca a mensagem quando ela é um erro técnico cru (constraint, RLS, rede, JWT etc.),
+// que o cliente não tem como entender; sem nenhuma mensagem, usa o fallback do contexto.
+const friendlyError = (err, fallbackKey) => {
+  const raw = (err && err.message) || '';
+  if (/row-level security/i.test(raw)) return t('err_sem_permissao');
+  if (/duplicate key value violates unique constraint/i.test(raw)) return t('err_registro_duplicado');
+  if (/violates foreign key constraint/i.test(raw)) return t('err_vinculo_existente');
+  if (/violates check constraint/i.test(raw)) return t('err_dado_invalido');
+  if (/failed to fetch/i.test(raw)) return t('err_sem_conexao');
+  if (/jwt/i.test(raw)) return t('err_sessao_expirada');
+  if (/invalid login credentials/i.test(raw)) return t('err_credenciais_invalidas');
+  return raw || t(fallbackKey);
+};
+
 // ============================================================
 // IDIOMA DO SISTEMA (PT / ES / EN) — conforme o país da empresa
 // ============================================================
@@ -192,6 +209,16 @@ const fmtDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-PT')
 // 2) trocar o texto fixo por t('chave').
 const UI_TEXT = {
   pt: {
+    err_sem_permissao: 'Você não tem permissão para fazer isso.',
+    err_registro_duplicado: 'Já existe um registro com esses dados (por exemplo, um e-mail que já está em uso).',
+    err_vinculo_existente: 'Não foi possível concluir porque há outros dados vinculados a isso.',
+    err_dado_invalido: 'Um dos campos preenchidos não é válido. Confira os dados e tente novamente.',
+    err_sem_conexao: 'Não foi possível conectar. Verifique sua internet e tente novamente.',
+    err_sessao_expirada: 'Sua sessão expirou. Faça login novamente.',
+    err_credenciais_invalidas: 'E-mail ou senha incorretos.',
+    rst_erro_generico: 'Não foi possível alterar a senha. Tente novamente.',
+    efm_erro_generico: 'Erro ao salvar colaborador.',
+    pf_erro_generico: 'Erro ao salvar a obra. Tente novamente.',
     nav_dashboard: 'Dashboard', nav_obras: 'Obras', nav_equipe: 'Equipe', nav_financeiro: 'Financeiro',
     nav_salarios: 'Salários', nav_pagamentos: 'Pagamentos', nav_servicos: 'Serviços', nav_metragens: 'Metragens',
     nav_notas_fiscais: 'Notas Fiscais', nav_notificacoes: 'Notificações', nav_sair: 'Sair',
@@ -529,6 +556,16 @@ const UI_TEXT = {
     rst_salvando: 'Salvando...', rst_salvar: 'Salvar nova senha',
   },
   es: {
+    err_sem_permissao: 'No tienes permiso para hacer esto.',
+    err_registro_duplicado: 'Ya existe un registro con esos datos (por ejemplo, un correo que ya está en uso).',
+    err_vinculo_existente: 'No se pudo completar porque hay otros datos vinculados a esto.',
+    err_dado_invalido: 'Uno de los campos rellenados no es válido. Revisa los datos e inténtalo de nuevo.',
+    err_sem_conexao: 'No se pudo conectar. Comprueba tu conexión a internet e inténtalo de nuevo.',
+    err_sessao_expirada: 'Tu sesión ha caducado. Inicia sesión de nuevo.',
+    err_credenciais_invalidas: 'Correo o contraseña incorrectos.',
+    rst_erro_generico: 'No se pudo cambiar la contraseña. Inténtalo de nuevo.',
+    efm_erro_generico: 'Error al guardar el colaborador.',
+    pf_erro_generico: 'Error al guardar la obra. Inténtalo de nuevo.',
     nav_dashboard: 'Panel', nav_obras: 'Obras', nav_equipe: 'Equipo', nav_financeiro: 'Finanzas',
     nav_salarios: 'Salarios', nav_pagamentos: 'Pagos', nav_servicos: 'Servicios', nav_metragens: 'Metrajes',
     nav_notas_fiscais: 'Facturas', nav_notificacoes: 'Notificaciones', nav_sair: 'Salir',
@@ -866,6 +903,16 @@ const UI_TEXT = {
     rst_salvando: 'Guardando...', rst_salvar: 'Guardar nueva contraseña',
   },
   en: {
+    err_sem_permissao: "You don't have permission to do this.",
+    err_registro_duplicado: 'A record with this data already exists (for example, an email already in use).',
+    err_vinculo_existente: 'This could not be completed because other data is linked to it.',
+    err_dado_invalido: "One of the fields you entered isn't valid. Check the data and try again.",
+    err_sem_conexao: 'Could not connect. Check your internet connection and try again.',
+    err_sessao_expirada: 'Your session has expired. Please log in again.',
+    err_credenciais_invalidas: 'Incorrect email or password.',
+    rst_erro_generico: 'Could not change the password. Please try again.',
+    efm_erro_generico: 'Error saving team member.',
+    pf_erro_generico: 'Error saving the project. Please try again.',
     nav_dashboard: 'Dashboard', nav_obras: 'Projects', nav_equipe: 'Team', nav_financeiro: 'Finance',
     nav_salarios: 'Payroll', nav_pagamentos: 'Payments', nav_servicos: 'Services', nav_metragens: 'Measurements',
     nav_notas_fiscais: 'Invoices', nav_notificacoes: 'Notifications', nav_sair: 'Log out',
@@ -1610,7 +1657,7 @@ function ResetPasswordPage({ onDone }) {
     setLoading(true);
     const { error } = await db.auth.updateUser({ password });
     setLoading(false);
-    if (error) { setError(error.message); return; }
+    if (error) { setError(friendlyError(error, 'rst_erro_generico')); return; }
     await db.auth.signOut();
     onDone();
   };
@@ -1867,7 +1914,10 @@ function LandingPage({ onBackToLogin, mode = 'generic' }) {
     });
     if (regError) {
       setSaving(false);
-      setError(regError.message || t.genericErr);
+      // A função já lança mensagens amigáveis (ex: "Já existe uma conta com este e-mail") —
+      // só troca pelo erro genérico se for um erro técnico cru vazando (constraint, RLS etc.).
+      const isRawDbError = /constraint|row-level security/i.test(regError.message || '');
+      setError(!isRawDbError && regError.message ? regError.message : t.genericErr);
       return;
     }
 
@@ -2758,7 +2808,7 @@ function CompanyFormModal({ company, onClose, onSaved }) {
       }
       onSaved();
     } catch (err) {
-      setError(err.message || t('cfm_erro_generico'));
+      setError(friendlyError(err, 'cfm_erro_generico'));
     }
     setSaving(false);
   };
@@ -3348,7 +3398,7 @@ function EmployeeFormModal({ employee, onClose, onSaved }) {
         p_start_date: form.employment_type === 'registered' && form.start_date ? form.start_date : null,
         p_first_salary_date: form.employment_type === 'registered' && form.first_salary_date ? form.first_salary_date : null,
       });
-      if (error) { setError(error.message); setSaving(false); return; }
+      if (error) { setError(friendlyError(error, 'efm_erro_generico')); setSaving(false); return; }
       onSaved();
       return;
     }
@@ -3366,7 +3416,7 @@ function EmployeeFormModal({ employee, onClose, onSaved }) {
       p_start_date: form.employment_type === 'registered' && form.start_date ? form.start_date : null,
       p_first_salary_date: form.employment_type === 'registered' && form.first_salary_date ? form.first_salary_date : null,
     });
-    if (error) { setError(error.message); setSaving(false); return; }
+    if (error) { setError(friendlyError(error, 'efm_erro_generico')); setSaving(false); return; }
     onSaved();
   };
 
@@ -5075,7 +5125,7 @@ function QuickServiceModal({ companyId, onClose, onCreated }) {
       .insert({ company_id: companyId, name, description: description || null })
       .select().single();
     setSaving(false);
-    if (err) { setError(err.message || t('qs_erro_cadastrar')); return; }
+    if (err) { setError(friendlyError(err, 'qs_erro_cadastrar')); return; }
     onCreated(data);
   };
 
@@ -5399,7 +5449,7 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
         updatePayload.status = completo ? 'a_iniciar' : 'rascunho';
       }
       const { data, error: projError } = await db.from('projects').update(updatePayload).eq('id', editingProject.id).select().single();
-      if (projError) { setError(projError.message); setSaving(false); return; }
+      if (projError) { setError(friendlyError(projError, 'pf_erro_generico')); setSaving(false); return; }
       project = data;
       // Delete and re-insert services
       await db.from('project_services').delete().eq('project_id', editingProject.id);
@@ -5408,7 +5458,7 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
     } else {
       // INSERT new project
       const { data, error: projError } = await db.from('projects').insert({ company_id: companyId, ...projectData, status: completo ? 'a_iniciar' : 'rascunho' }).select().single();
-      if (projError) { setError(projError.message); setSaving(false); return; }
+      if (projError) { setError(friendlyError(projError, 'pf_erro_generico')); setSaving(false); return; }
       project = data;
     }
 
@@ -5429,7 +5479,7 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
         subtotal: serviceSubtotal(s),
       }));
       const { data: insertedServices, error: servError } = await db.from('project_services').insert(serviceRows).select();
-      if (servError) { setError(servError.message); setSaving(false); return; }
+      if (servError) { setError(friendlyError(servError, 'pf_erro_generico')); setSaving(false); return; }
 
       // Salva as descrições de cada serviço, vinculadas ao id do serviço recém-criado
       const descRows = [];
@@ -5510,7 +5560,7 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
       }
     } else if (teamRows.length > 0) {
       const { error: teamError } = await db.from('project_team').insert(teamRows);
-      if (teamError) { setError(teamError.message); setSaving(false); return; }
+      if (teamError) { setError(friendlyError(teamError, 'pf_erro_generico')); setSaving(false); return; }
     }
 
     onSaved();
