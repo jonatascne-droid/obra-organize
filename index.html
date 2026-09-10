@@ -504,6 +504,11 @@ const UI_TEXT = {
     cfm_aliquota_desc_br: 'O Brasil não tem uma alíquota única de imposto sobre serviço (ISS varia por município, e empresas do Simples Nacional têm alíquota própria conforme o faturamento). Preencha aqui a alíquota efetiva do seu caso, confirmando com seu contador.',
     cfm_aliquota_desc_geral: 'Deixe em branco se não quiser usar a estimativa de imposto nos orçamentos.',
     cfm_logo_label: 'Logo da empresa (PNG, JPG ou PDF)', cfm_logo_placeholder: 'Clique para selecionar um arquivo',
+    cfm_contato_redes: 'Contato e redes sociais',
+    cfm_contato_redes_desc: 'Opcional. O que você preencher aqui aparece no orçamento em PDF.',
+    cfm_telefone: 'Telefone / WhatsApp', cfm_site: 'Site',
+    cfm_instagram: 'Instagram', cfm_facebook: 'Facebook', cfm_linkedin: 'LinkedIn',
+    cfm_tiktok: 'TikTok', cfm_youtube: 'YouTube',
     cfm_erro_generico: 'Erro ao salvar empresa.',
     efm_title_editar: 'Editar colaborador', efm_title_novo: 'Cadastrar colaborador',
     efm_nome_completo: 'Nome completo', efm_nome_ph: 'Nome do colaborador', efm_idade: 'Idade',
@@ -851,6 +856,11 @@ const UI_TEXT = {
     cfm_aliquota_desc_br: 'Brasil no tiene un tipo único de impuesto sobre servicios (el ISS varía por municipio, y las empresas del Simples Nacional tienen un tipo propio según la facturación). Introduce aquí el tipo efectivo de tu caso, confirmando con tu asesor.',
     cfm_aliquota_desc_geral: 'Déjalo en blanco si no quieres usar la estimación de impuesto en los presupuestos.',
     cfm_logo_label: 'Logo de la empresa (PNG, JPG o PDF)', cfm_logo_placeholder: 'Haz clic para seleccionar un archivo',
+    cfm_contato_redes: 'Contacto y redes sociales',
+    cfm_contato_redes_desc: 'Opcional. Lo que rellenes aquí aparece en el presupuesto en PDF.',
+    cfm_telefone: 'Teléfono / WhatsApp', cfm_site: 'Sitio web',
+    cfm_instagram: 'Instagram', cfm_facebook: 'Facebook', cfm_linkedin: 'LinkedIn',
+    cfm_tiktok: 'TikTok', cfm_youtube: 'YouTube',
     cfm_erro_generico: 'Error al guardar la empresa.',
     efm_title_editar: 'Editar colaborador', efm_title_novo: 'Registrar colaborador',
     efm_nome_completo: 'Nombre completo', efm_nome_ph: 'Nombre del colaborador', efm_idade: 'Edad',
@@ -1198,6 +1208,11 @@ const UI_TEXT = {
     cfm_aliquota_desc_br: 'Brazil has no single service tax rate (ISS varies by municipality, and Simples Nacional companies have their own rate based on revenue). Enter your effective rate here, confirming with your accountant.',
     cfm_aliquota_desc_geral: 'Leave blank if you don\'t want to use the tax estimate in budgets.',
     cfm_logo_label: 'Company logo (PNG, JPG or PDF)', cfm_logo_placeholder: 'Click to select a file',
+    cfm_contato_redes: 'Contact and social media',
+    cfm_contato_redes_desc: 'Optional. Whatever you fill in here shows up on the PDF quote.',
+    cfm_telefone: 'Phone / WhatsApp', cfm_site: 'Website',
+    cfm_instagram: 'Instagram', cfm_facebook: 'Facebook', cfm_linkedin: 'LinkedIn',
+    cfm_tiktok: 'TikTok', cfm_youtube: 'YouTube',
     cfm_erro_generico: 'Error saving company.',
     efm_title_editar: 'Edit team member', efm_title_novo: 'Add team member',
     efm_nome_completo: 'Full name', efm_nome_ph: "Team member's name", efm_idade: 'Age',
@@ -2747,6 +2762,13 @@ function CompanyFormModal({ company, onClose, onSaved }) {
   const [password, setPassword] = useState('');
   const [country, setCountry] = useState(company?.country || 'ES');
   const [taxRate, setTaxRate] = useState(company?.tax_rate != null ? String(company.tax_rate) : '');
+  const [phone, setPhone] = useState(company?.phone || '');
+  const [website, setWebsite] = useState(company?.website || '');
+  const [instagram, setInstagram] = useState(company?.instagram || '');
+  const [facebook, setFacebook] = useState(company?.facebook || '');
+  const [linkedin, setLinkedin] = useState(company?.linkedin || '');
+  const [tiktok, setTiktok] = useState(company?.tiktok || '');
+  const [youtube, setYoutube] = useState(company?.youtube || '');
   const [logoFile, setLogoFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -2792,14 +2814,22 @@ function CompanyFormModal({ company, onClose, onSaved }) {
           p_logo_url: logoUrl,
         });
         if (updErr) throw updErr;
-        const { error: countryErr } = await db.from('companies').update({ country, tax_rate: taxRate !== '' ? parseFloat(taxRate) : null }).eq('id', company.id);
+        const { error: countryErr } = await db.from('companies').update({
+          country, tax_rate: taxRate !== '' ? parseFloat(taxRate) : null,
+          phone: phone || null, website: website || null, instagram: instagram || null,
+          facebook: facebook || null, linkedin: linkedin || null, tiktok: tiktok || null, youtube: youtube || null,
+        }).eq('id', company.id);
         if (countryErr) throw countryErr;
       } else {
         const { data: companyId, error: regErr } = await db.rpc('register_company', {
           p_company_name: name, p_email: email, p_password: password, p_logo_url: null,
         });
         if (regErr) throw regErr;
-        const { error: countryErr } = await db.from('companies').update({ country, tax_rate: taxRate !== '' ? parseFloat(taxRate) : null }).eq('id', companyId);
+        const { error: countryErr } = await db.from('companies').update({
+          country, tax_rate: taxRate !== '' ? parseFloat(taxRate) : null,
+          phone: phone || null, website: website || null, instagram: instagram || null,
+          facebook: facebook || null, linkedin: linkedin || null, tiktok: tiktok || null, youtube: youtube || null,
+        }).eq('id', companyId);
         if (countryErr) throw countryErr;
         if (logoFile) {
           const logoUrl = await uploadLogo(companyId);
@@ -2859,6 +2889,19 @@ function CompanyFormModal({ company, onClose, onSaved }) {
             <div className="text-sm text-slate-500">{logoFile ? logoFile.name : t('cfm_logo_placeholder')}</div>
           </div>
         </label>
+        <div>
+          <span className="block text-xs font-medium text-slate-500 mb-1.5">{t('cfm_contato_redes')}</span>
+          <p className="text-xs text-slate-400 mb-2.5">{t('cfm_contato_redes_desc')}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input label={t('cfm_telefone')} value={phone} onChange={e => setPhone(e.target.value)} placeholder="+34 600 000 000" />
+            <Input label={t('cfm_site')} value={website} onChange={e => setWebsite(e.target.value)} placeholder="www.suaempresa.com" />
+            <Input label={t('cfm_instagram')} value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="@suaempresa" />
+            <Input label={t('cfm_facebook')} value={facebook} onChange={e => setFacebook(e.target.value)} placeholder="facebook.com/suaempresa" />
+            <Input label={t('cfm_linkedin')} value={linkedin} onChange={e => setLinkedin(e.target.value)} placeholder="linkedin.com/company/suaempresa" />
+            <Input label={t('cfm_tiktok')} value={tiktok} onChange={e => setTiktok(e.target.value)} placeholder="@suaempresa" />
+            <Input label={t('cfm_youtube')} value={youtube} onChange={e => setYoutube(e.target.value)} placeholder="youtube.com/@suaempresa" />
+          </div>
+        </div>
         {error && <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{error}</div>}
         <div className="flex gap-2 pt-2">
           <Button type="submit" className="flex-1" disabled={saving}>{saving ? t('servicos_salvando') : t('servicos_salvar')}</Button>
@@ -7156,6 +7199,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       units: 'unidades', daily: 'Diária', hourly: 'Por hora',
       promoText: 'Gerencie suas obras, equipe e orçamentos com o', promoSite: 'obraorganize.digitproduc.com',
       promoQrCaption: 'Aponte a câmera e conheça', promoContactLabel: 'Quer seu próprio sistema? Fale com a AIVACS:',
+      contactPhoneLabel: 'Telefone', contactWebsiteLabel: 'Site',
     } : isUS ? {
       docTitle: 'QUOTE', docLabel: 'Professional quote', issuedOn: 'Issued on',
       sectionDetails: 'Project details', sectionServices: 'Services', sectionDescs: 'Detailed descriptions',
@@ -7169,6 +7213,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       units: 'units', daily: 'Daily rate', hourly: 'Hourly rate',
       promoText: 'Manage your projects, team and quotes with', promoSite: 'obraorganize.digitproduc.com',
       promoQrCaption: 'Scan to check it out', promoContactLabel: 'Want your own system? Contact AIVACS:',
+      contactPhoneLabel: 'Phone', contactWebsiteLabel: 'Website',
     } : {
       docTitle: 'PRESUPUESTO', docLabel: 'Presupuesto profesional', issuedOn: 'Emitido el',
       sectionDetails: 'Datos de la obra', sectionServices: 'Servicios', sectionDescs: 'Descripciones detalladas',
@@ -7182,6 +7227,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       units: 'unidades', daily: 'Por día', hourly: 'Por hora',
       promoText: 'Gestiona tus obras, equipo y presupuestos con', promoSite: 'obraorganize.digitproduc.com',
       promoQrCaption: 'Escanea y descúbrelo', promoContactLabel: '¿Quieres tu propio sistema? Contacta con AIVACS:',
+      contactPhoneLabel: 'Teléfono', contactWebsiteLabel: 'Web',
     };
 
     // Contato da AIVACS e link de assinatura do Obra Organize, conforme o país do documento
@@ -7193,6 +7239,21 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
     const totalFinal = project.amount_to_receive || project.budget || 0;
     const showTaxBreakdown = project.tax_passed_on && project.tax_amount;
     const serviceValueOnly = showTaxBreakdown ? totalFinal - project.tax_amount : totalFinal;
+
+    // Contato e redes sociais da empresa (preenchidos em "Editar perfil da empresa") — só
+    // aparecem no orçamento os campos que a empresa de fato preencheu.
+    const contactItems = [
+      company?.phone ? `${txt.contactPhoneLabel}: ${company.phone}` : null,
+      company?.website ? `${txt.contactWebsiteLabel}: ${company.website}` : null,
+      company?.instagram ? `Instagram: ${company.instagram}` : null,
+      company?.facebook ? `Facebook: ${company.facebook}` : null,
+      company?.linkedin ? `LinkedIn: ${company.linkedin}` : null,
+      company?.tiktok ? `TikTok: ${company.tiktok}` : null,
+      company?.youtube ? `YouTube: ${company.youtube}` : null,
+    ].filter(Boolean);
+    const contactHTML = contactItems.length > 0
+      ? `<div style="font-size:11px;color:#64748b;margin-top:6px;line-height:1.6;">${contactItems.join(' &middot; ')}</div>`
+      : '';
 
     // Cada descri\u00e7\u00e3o detalhada fica vinculada a um servi\u00e7o espec\u00edfico (project_service_id) \u2014
     // por isso, em vez de uma lista solta no topo do documento, elas s\u00e3o renderizadas dentro
@@ -7298,6 +7359,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       <div>
         <div class="company-name">${companyName}</div>
         <div class="company-label">${txt.docLabel}</div>
+        ${contactHTML}
       </div>
     </div>
     <div class="doc-info">
