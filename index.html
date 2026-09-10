@@ -7169,17 +7169,29 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       else if (s.pricing_method === 'hora') detail = txt.hourly;
       const svcName = s.service_name || txt.serviceNames[s.service_type] || s.service_type || '';
       const svcDescs = descs.filter(d => d.project_service_id === s.id);
-      const svcRow = `<tr>
-        <td style="padding:10px 12px;${svcDescs.length === 0 ? 'border-bottom:1px solid #f1f5f9;' : ''}">${svcName}</td>
-        <td style="padding:10px 12px;${svcDescs.length === 0 ? 'border-bottom:1px solid #f1f5f9;' : ''}color:#64748b;font-size:13px;">${detail || txt.pricingLabels[s.pricing_method] || ''}</td>
-        <td style="padding:10px 12px;${svcDescs.length === 0 ? 'border-bottom:1px solid #f1f5f9;' : ''}text-align:right;font-family:monospace;font-weight:600;color:#1E2B3C;">${fmtVal(s.subtotal)}</td>
-      </tr>`;
-      const descsRow = svcDescs.length > 0 ? `<tr>
-        <td colspan="3" style="padding:0 12px 14px 12px;border-bottom:1px solid #f1f5f9;">
-          <div style="display:flex;flex-direction:column;gap:10px;">${svcDescs.map(descCardHTML).join('')}</div>
+      const svcValue = `<span style="font-family:monospace;font-weight:600;color:#1E2B3C;white-space:nowrap;">${fmtVal(s.subtotal)}</span>`;
+      // Serviço sem descrição: linha simples de 3 colunas. Com descrição: tudo (nome, detalhe,
+      // valor e descrição) vira UM único <tr> — assim break-inside:avoid mantém o "card" inteiro
+      // junto ao paginar, em vez de arriscar cortar entre a linha do serviço e a da descrição.
+      if (svcDescs.length === 0) {
+        return `<tr>
+          <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;">${svcName}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;color:#64748b;font-size:13px;">${detail || txt.pricingLabels[s.pricing_method] || ''}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;text-align:right;">${svcValue}</td>
+        </tr>`;
+      }
+      return `<tr>
+        <td colspan="3" style="padding:10px 12px 14px 12px;border-bottom:1px solid #f1f5f9;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <div>
+              <div>${svcName}</div>
+              <div style="color:#64748b;font-size:13px;margin-top:2px;">${detail || txt.pricingLabels[s.pricing_method] || ''}</div>
+            </div>
+            ${svcValue}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">${svcDescs.map(descCardHTML).join('')}</div>
         </td>
-      </tr>` : '';
-      return svcRow + descsRow;
+      </tr>`;
     }).join('') : `<tr><td colspan="3" style="padding:10px 12px;color:#94a3b8;font-style:italic;">${txt.noService}</td></tr>`;
 
     const html = `<!DOCTYPE html>
@@ -7210,9 +7222,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
   thead tr { background: #f8fafc; }
   thead th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
   thead th:last-child { text-align: right; }
-  .total-row { background: #1E2B3C; }
-  .total-row td { padding: 14px 12px; color: white; font-weight: 700; font-size: 15px; }
-  .total-row td:last-child { text-align: right; font-family: monospace; font-size: 18px; color: #F2641A; }
+  .total-row { background: #1E2B3C; border-radius: 8px; }
   .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
   .footer-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   .footer-brand { font-size: 11px; color: #94a3b8; }
@@ -7224,6 +7234,10 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
   .footer-promo-qr img { width: 72px; height: 72px; border-radius: 6px; }
   .footer-promo-qr span { font-size: 9px; color: #94a3b8; text-align: center; max-width: 90px; }
   .status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #f1f5f9; color: #64748b; }
+  /* Nunca corta uma linha/card ao meio ao paginar — o bloco inteiro pula pra próxima página
+     (a seção em si pode continuar na página seguinte, só cada linha/card fica inteiro). */
+  tr, .info-item, .footer-promo { page-break-inside: avoid; break-inside: avoid; }
+  .section-title { page-break-after: avoid; break-after: avoid; }
   @media print { body { padding: 20px; } }
 </style>
 </head>
@@ -7261,17 +7275,20 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       <thead><tr><th>${txt.thService}</th><th>${txt.thDetails}</th><th style="text-align:right">${txt.thValue}</th></tr></thead>
       <tbody>${servicesHTML}</tbody>
       <tfoot>
-        ${showTaxBreakdown ? `<tr>
-          <td colspan="2" style="padding:8px 12px;color:#64748b;font-size:13px;">${txt.serviceValueLabel}</td>
-          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:#1E2B3C;">${fmtVal(serviceValueOnly)}</td>
-        </tr>
         <tr>
-          <td colspan="2" style="padding:8px 12px;color:#64748b;font-size:13px;">${txt.taxLabel}</td>
-          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:#1E2B3C;">${fmtVal(project.tax_amount)}</td>
-        </tr>` : ''}
-        <tr class="total-row">
-          <td colspan="2">${txt.totalBudget}</td>
-          <td>${fmtVal(totalFinal)}</td>
+          <td colspan="3" style="padding:0;">
+            <div style="display:flex;flex-direction:column;">
+              ${showTaxBreakdown ? `<div style="display:flex;justify-content:space-between;padding:8px 12px;color:#64748b;font-size:13px;">
+                <span>${txt.serviceValueLabel}</span><span style="font-family:monospace;color:#1E2B3C;">${fmtVal(serviceValueOnly)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:8px 12px;color:#64748b;font-size:13px;">
+                <span>${txt.taxLabel}</span><span style="font-family:monospace;color:#1E2B3C;">${fmtVal(project.tax_amount)}</span>
+              </div>` : ''}
+              <div class="total-row" style="display:flex;justify-content:space-between;padding:14px 12px;color:white;font-weight:700;font-size:15px;">
+                <span>${txt.totalBudget}</span><span style="text-align:right;font-family:monospace;font-size:18px;color:#F2641A;">${fmtVal(totalFinal)}</span>
+              </div>
+            </div>
+          </td>
         </tr>
       </tfoot>
     </table>
