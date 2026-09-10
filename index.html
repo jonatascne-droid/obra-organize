@@ -716,7 +716,7 @@ const UI_TEXT = {
     sb_cadastre_personalizado: 'Registra servicios personalizados en la pestaña Servicios',
     sb_sem_servico_cadastrado: 'Ningún servicio registrado. Registra un servicio en la pestaña Servicios antes de continuar.',
     pf_obra_sem_titulo: 'Obra sin título',
-    pf_servico_sem_metodo: 'Selecciona la forma de cobro (m², unidad, jornal, hora, ajuste alzado o valor libre) de todos los servicios añadidos antes de guardar.',
+    pf_servico_sem_metodo: 'Selecciona la forma de cobro (m², unidad, por día, por hora, precio fijo o valor libre) de todos los servicios añadidos antes de guardar.',
     sb_metodo_orcar: 'Método para presupuestar...',
     pf_title_editar: 'Editar obra', pf_title_nova: 'Registrar obra',
     pf_nome_obra: 'Nombre de la obra', pf_nome_obra_ph: 'Ej: Reforma Apartamento Centro',
@@ -838,7 +838,7 @@ const UI_TEXT = {
     mc_salvar_projeto_texto: 'Guarda el plano completo (todas las paredes) y los ambientes nombrados arriba como un solo proyecto en la pestaña Metrajes.',
     mc_nome_projeto_ph: 'Nombre del proyecto (ej: Casa Completa)',
     mc_salvar_metragem: 'Guardar metraje', mc_prefixo_parede: 'P',
-    mc_comodo_nao_localizado: 'No se pudo localizar esa habitación en el dibujo actual — puede haber sido modificada. Selecciónala de nuevo haciendo clic en el área.',
+    mc_comodo_nao_localizado: 'No se pudo localizar ese ambiente en el dibujo actual — puede haber sido modificado. Selecciónalo de nuevo haciendo clic en el área.',
     cfm_title_editar: 'Editar empresa', cfm_title_novo: 'Registrar empresa',
     cfm_nome_empresa: 'Nombre de la empresa', cfm_nome_empresa_ph: 'Ej: Construcciones Silva',
     cfm_email_login: 'Correo de acceso (acceso del admin)',
@@ -7275,6 +7275,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       units: 'unidades', daily: 'Diária', hourly: 'Por hora',
       promoText: 'Gerencie suas obras, equipe e orçamentos com o', promoSite: 'obraorganize.digitproduc.com',
       promoQrCaption: 'Aponte a câmera e conheça', promoContactLabel: 'Quer seu próprio sistema? Fale com a AIVACS:',
+      promoWaCta: 'Contate pelo WhatsApp', promoWaMessage: 'Olá, me interessei nos serviços da AIVACS, gostaria de saber mais.',
       contactPhoneLabel: 'Telefone', contactWebsiteLabel: 'Site',
     } : isUS ? {
       docTitle: 'QUOTE', docLabel: 'Professional quote', issuedOn: 'Issued on',
@@ -7289,6 +7290,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       units: 'units', daily: 'Daily rate', hourly: 'Hourly rate',
       promoText: 'Manage your projects, team and quotes with', promoSite: 'obraorganize.digitproduc.com',
       promoQrCaption: 'Scan to check it out', promoContactLabel: 'Want your own system? Contact AIVACS:',
+      promoWaCta: 'Contact us on WhatsApp', promoWaMessage: "Hi, I'm interested in AIVACS's services, I'd like to know more.",
       contactPhoneLabel: 'Phone', contactWebsiteLabel: 'Website',
     } : {
       docTitle: 'PRESUPUESTO', docLabel: 'Presupuesto profesional', issuedOn: 'Emitido el',
@@ -7303,11 +7305,13 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       units: 'unidades', daily: 'Por día', hourly: 'Por hora',
       promoText: 'Gestiona tus obras, equipo y presupuestos con', promoSite: 'obraorganize.digitproduc.com',
       promoQrCaption: 'Escanea y descúbrelo', promoContactLabel: '¿Quieres tu propio sistema? Contacta con AIVACS:',
+      promoWaCta: 'Contacta por WhatsApp', promoWaMessage: 'Hola, me interesan los servicios de AIVACS, me gustaría saber más.',
       contactPhoneLabel: 'Teléfono', contactWebsiteLabel: 'Web',
     };
 
     // Contato da AIVACS e link de assinatura do Obra Organize, conforme o país do documento
     const aivacsPhone = isBR ? '+55 (44) 99909-5969' : '+34 656 99 51 56';
+    const aivacsWaLink = `https://wa.me/${aivacsPhone.replace(/\D/g, '')}?text=${encodeURIComponent(txt.promoWaMessage)}`;
     const signupPath = isBR ? 'br' : isUS ? 'us' : 'es';
     const signupUrl = `https://obraorganize.digitproduc.com/#${signupPath}`;
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=0&data=${encodeURIComponent(signupUrl)}`;
@@ -7490,7 +7494,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
     <div class="footer-promo">
       <div class="footer-promo-text">
         ${txt.promoText} <strong>Obra Organize</strong> — ${txt.promoSite}<br/>
-        ${txt.promoContactLabel} <strong>${aivacsPhone}</strong>
+        ${txt.promoContactLabel} <a href="${aivacsWaLink}" style="color:#F2641A;font-weight:700;text-decoration:none;">${txt.promoWaCta}</a>
       </div>
       <div class="footer-promo-qr">
         <img src="${qrCodeUrl}" alt="QR code" />
