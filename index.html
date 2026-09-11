@@ -489,6 +489,7 @@ const UI_TEXT = {
     mc_nome_projeto_ph: 'Nome do projeto (ex: Casa Completa)',
     mc_salvar_metragem: 'Salvar metragem', mc_prefixo_parede: 'P',
     mc_comodo_nao_localizado: 'Não foi possível localizar esse cômodo no desenho atual — pode ter sido alterado. Selecione-o de novo clicando na área.',
+    mc_erro_salvar: 'Não foi possível salvar a metragem. Tente novamente.',
     cfm_title_editar: 'Editar empresa', cfm_title_novo: 'Cadastrar empresa',
     cfm_nome_empresa: 'Nome da empresa', cfm_nome_empresa_ph: 'Ex: Construtora Silva',
     cfm_email_login: 'E-mail de login (acesso do admin)',
@@ -843,6 +844,7 @@ const UI_TEXT = {
     mc_nome_projeto_ph: 'Nombre del proyecto (ej: Casa Completa)',
     mc_salvar_metragem: 'Guardar metraje', mc_prefixo_parede: 'P',
     mc_comodo_nao_localizado: 'No se pudo localizar ese ambiente en el dibujo actual — puede haber sido modificado. Selecciónalo de nuevo haciendo clic en el área.',
+    mc_erro_salvar: 'No fue posible guardar el metraje. Inténtalo de nuevo.',
     cfm_title_editar: 'Editar empresa', cfm_title_novo: 'Registrar empresa',
     cfm_nome_empresa: 'Nombre de la empresa', cfm_nome_empresa_ph: 'Ej: Construcciones Silva',
     cfm_email_login: 'Correo de acceso (acceso del admin)',
@@ -1197,6 +1199,7 @@ const UI_TEXT = {
     mc_nome_projeto_ph: 'Project name (e.g: Full House)',
     mc_salvar_metragem: 'Save measurement', mc_prefixo_parede: 'W',
     mc_comodo_nao_localizado: 'Could not locate this room in the current drawing — it may have changed. Select it again by clicking the area.',
+    mc_erro_salvar: 'Could not save the measurement. Please try again.',
     cfm_title_editar: 'Edit company', cfm_title_novo: 'Register company',
     cfm_nome_empresa: 'Company name', cfm_nome_empresa_ph: 'E.g.: Silva Construction',
     cfm_email_login: 'Login email (admin access)',
@@ -6612,7 +6615,7 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
     const generalWallsArea = savedRoomsList.length > 0
       ? Math.round(savedRoomsList.reduce((sum, r) => sum + (r.walls_area_m2 || 0), 0) * 100) / 100
       : (results?.wallsArea ?? null);
-    await db.from('measurements').upsert({
+    const { error } = await db.from('measurements').upsert({
       ...(measurementId ? { id: measurementId } : {}),
       company_id: companyId,
       name: saveName,
@@ -6624,6 +6627,10 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
       updated_at: new Date().toISOString(),
     });
     setSaving(false);
+    // Fecha o modal assim que salvar — sem isso o usuário não via confirmação nenhuma
+    // de que salvou, clicava de novo e acabava criando o mesmo projeto várias vezes.
+    if (!error) onClose();
+    else alert(friendlyError(error, 'mc_erro_salvar'));
   };
 
   // Salva o cômodo dentro da LISTA LOCAL deste projeto (não cria outro projeto separado).
