@@ -196,6 +196,14 @@ const friendlyError = (err, fallbackKey) => {
   return raw || t(fallbackKey);
 };
 
+// Aviso padrão para qualquer tentativa de escrita feita pela conta de demonstração
+// (profile.role === 'viewer'). Os botões de criar/editar/salvar/excluir continuam
+// visíveis e clicáveis nessa conta — pra simular o uso real do sistema — só a
+// gravação em si é interrompida aqui, antes de qualquer chamada ao banco (a RLS
+// bloquearia de qualquer forma, mas assim o aviso é imediato e não depende do erro
+// cru do Postgres).
+const demoBlocked = () => { alert(t('demo_bloqueado')); return false; };
+
 // ============================================================
 // IDIOMA DO SISTEMA (PT / ES / EN) — conforme o país da empresa
 // ============================================================
@@ -227,6 +235,7 @@ const UI_TEXT = {
     dashboard_title: 'Dashboard', dashboard_subtitle: 'Visão geral das obras e da equipe',
     dash_painel_administrativo: 'Painel administrativo',
     demo_banner: 'Modo demonstração — dados de exemplo, apenas para visualização. Nada aqui pode ser editado ou salvo.',
+    demo_bloqueado: 'Modo demonstração — esta é uma conta de teste e as alterações não são salvas.',
     emp_area_colaborador: 'Área do colaborador',
     emp_ola: (n) => `Olá, ${n}`,
     emp_tarefas_subtitulo: 'Clique em uma obra para ver os detalhes, deixar notas ou solicitar alterações',
@@ -582,6 +591,7 @@ const UI_TEXT = {
     dashboard_title: 'Panel', dashboard_subtitle: 'Visión general de las obras y del equipo',
     dash_painel_administrativo: 'Panel administrativo',
     demo_banner: 'Modo demostración — datos de ejemplo, solo para visualización. Nada aquí se puede editar ni guardar.',
+    demo_bloqueado: 'Modo demostración — esta es una cuenta de prueba y los cambios no se guardan.',
     emp_area_colaborador: 'Área del colaborador',
     emp_ola: (n) => `Hola, ${n}`,
     emp_tarefas_subtitulo: 'Haz clic en una obra para ver los detalles, dejar notas o solicitar cambios',
@@ -937,6 +947,7 @@ const UI_TEXT = {
     dashboard_title: 'Dashboard', dashboard_subtitle: 'Overview of your projects and team',
     dash_painel_administrativo: 'Admin panel',
     demo_banner: 'Demo mode — sample data, view-only. Nothing here can be edited or saved.',
+    demo_bloqueado: 'Demo mode — this is a test account and changes are not saved.',
     emp_area_colaborador: 'Team member area',
     emp_ola: (n) => `Hi, ${n}`,
     emp_tarefas_subtitulo: 'Click on a project to see details, leave notes, or request changes',
@@ -2820,7 +2831,7 @@ function CompanyDetail({ company, onBack }) {
   );
 }
 
-function CompanyFormModal({ company, onClose, onSaved }) {
+function CompanyFormModal({ company, onClose, onSaved, isViewer }) {
   const isEdit = !!company;
   const [name, setName] = useState(company?.name || '');
   const [email, setEmail] = useState(company?.email || '');
@@ -2865,6 +2876,7 @@ function CompanyFormModal({ company, onClose, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isViewer) return demoBlocked();
     setSaving(true);
     setError('');
     try {
@@ -3077,9 +3089,11 @@ function AdminArea({ profile, onLogout }) {
 
   if (loading) return <Spinner />;
 
-  // Conta "viewer": link de demonstração do site, somente leitura. A segurança de
-  // verdade é garantida no banco (RLS só permite SELECT pra esse papel) — esconder os
-  // botões aqui é só pra a experiência ficar limpa (sem toggles que "marcam" mas não salvam).
+  // Conta "viewer": link de demonstração do site. A segurança de verdade é garantida
+  // no banco (RLS só permite SELECT pra esse papel) — no frontend, os botões de criar/
+  // editar/salvar/excluir continuam visíveis e clicáveis (pra simular o uso real do
+  // sistema), e é a própria ação de gravar que é interrompida com o aviso de
+  // demoBlocked(), antes de qualquer chamada ao banco.
   const isViewer = profile.role === 'viewer';
 
   const pendingCount = notifications.filter(n => n.status === 'pendente').length + noteNotifications.filter(n => !n.is_read).length;
@@ -3108,7 +3122,7 @@ function AdminArea({ profile, onLogout }) {
       active={page}
       onNavigate={setPage}
       onLogout={onLogout}
-      onEditProfile={isViewer ? undefined : () => setEditingCompany(true)}
+      onEditProfile={() => setEditingCompany(true)}
     >
       {isViewer && (
         <div className="bg-blueprint text-white text-sm text-center rounded-2xl px-4 py-3 mb-6 flex items-center justify-center gap-2">
@@ -3182,7 +3196,7 @@ function AdminArea({ profile, onLogout }) {
       {page === 'obras' && (
         <>
           <PageHeader title={t('obras_title')} subtitle={t('obras_subtitle')}
-            action={!isViewer && <Button onClick={() => setShowProjectForm(true)}><Icon path={ICONS.plus} className="w-4 h-4"/>{t('obras_cadastrar')}</Button>} />
+            action={<Button onClick={() => setShowProjectForm(true)}><Icon path={ICONS.plus} className="w-4 h-4"/>{t('obras_cadastrar')}</Button>} />
           <div className="flex items-center justify-end mb-4">
             <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer">
               <input type="checkbox" checked={showArchivedProjects} onChange={e => setShowArchivedProjects(e.target.checked)} className="w-4 h-4 accent-safety rounded" />
@@ -3217,7 +3231,7 @@ function AdminArea({ profile, onLogout }) {
       {page === 'equipe' && (
         <>
           <PageHeader title={t('equipe_title')} subtitle={t('equipe_subtitle')}
-            action={!isViewer && <Button onClick={() => setShowEmployeeForm(true)}><Icon path={ICONS.plus} className="w-4 h-4"/>{t('equipe_cadastrar')}</Button>} />
+            action={<Button onClick={() => setShowEmployeeForm(true)}><Icon path={ICONS.plus} className="w-4 h-4"/>{t('equipe_cadastrar')}</Button>} />
           <div className="flex items-center justify-end mb-4">
             <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer">
               <input type="checkbox" checked={showArchivedEmployees} onChange={e => setShowArchivedEmployees(e.target.checked)} className="w-4 h-4 accent-safety rounded" />
@@ -3247,32 +3261,33 @@ function AdminArea({ profile, onLogout }) {
                       <span className="text-xs text-slate-400">{t('equipe_dia_pagamento')(e.payment_day)}</span>
                     </div>
                   )}
-                  {!isViewer && (
-                    <div className="flex items-center gap-2 pt-1">
-                      <button onClick={() => setEditingEmployee(e)} className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:text-blueprint hover:bg-slate-50">
-                        <Icon path={ICONS.edit} className="w-4 h-4" /> {t('common_editar')}
-                      </button>
-                      <ArchiveDeleteMenu
-                        archived={e.archived}
-                        onArchive={async () => {
-                          if (confirm(t('equipe_confirmar_arquivar')(e.full_name))) {
-                            await db.rpc('archive_employee', { p_employee_id: e.id });
-                            loadData();
-                          }
-                        }}
-                        onUnarchive={async () => {
-                          await db.rpc('unarchive_employee', { p_employee_id: e.id });
+                  <div className="flex items-center gap-2 pt-1">
+                    <button onClick={() => setEditingEmployee(e)} className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:text-blueprint hover:bg-slate-50">
+                      <Icon path={ICONS.edit} className="w-4 h-4" /> {t('common_editar')}
+                    </button>
+                    <ArchiveDeleteMenu
+                      archived={e.archived}
+                      onArchive={async () => {
+                        if (isViewer) return demoBlocked();
+                        if (confirm(t('equipe_confirmar_arquivar')(e.full_name))) {
+                          await db.rpc('archive_employee', { p_employee_id: e.id });
                           loadData();
-                        }}
-                        onDelete={async () => {
-                          if (confirm(t('equipe_confirmar_excluir')(e.full_name))) {
-                            await db.rpc('delete_employee', { p_employee_id: e.id });
-                            loadData();
-                          }
-                        }}
-                      />
-                    </div>
-                  )}
+                        }
+                      }}
+                      onUnarchive={async () => {
+                        if (isViewer) return demoBlocked();
+                        await db.rpc('unarchive_employee', { p_employee_id: e.id });
+                        loadData();
+                      }}
+                      onDelete={async () => {
+                        if (isViewer) return demoBlocked();
+                        if (confirm(t('equipe_confirmar_excluir')(e.full_name))) {
+                          await db.rpc('delete_employee', { p_employee_id: e.id });
+                          loadData();
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -3405,11 +3420,11 @@ function AdminArea({ profile, onLogout }) {
       )}
 
       {showEmployeeForm && (
-        <EmployeeFormModal onClose={() => setShowEmployeeForm(false)} onSaved={() => { setShowEmployeeForm(false); loadData(); }} />
+        <EmployeeFormModal onClose={() => setShowEmployeeForm(false)} onSaved={() => { setShowEmployeeForm(false); loadData(); }} isViewer={isViewer} />
       )}
 
       {editingEmployee && (
-        <EmployeeFormModal employee={editingEmployee} onClose={() => setEditingEmployee(null)} onSaved={() => { setEditingEmployee(null); loadData(); }} />
+        <EmployeeFormModal employee={editingEmployee} onClose={() => setEditingEmployee(null)} onSaved={() => { setEditingEmployee(null); loadData(); }} isViewer={isViewer} />
       )}
 
       {(showProjectForm || editingProject) && (
@@ -3445,6 +3460,7 @@ function AdminArea({ profile, onLogout }) {
           notification={viewingNotification}
           onClose={() => setViewingNotification(null)}
           onResolved={() => { setViewingNotification(null); loadData(); }}
+          isViewer={isViewer}
         />
       )}
       {viewingSalaryEmployee && (
@@ -3462,13 +3478,14 @@ function AdminArea({ profile, onLogout }) {
           company={company}
           onClose={() => setEditingCompany(false)}
           onSaved={() => { setEditingCompany(false); loadData(); }}
+          isViewer={isViewer}
         />
       )}
     </AppShell>
   );
 }
 
-function EmployeeFormModal({ employee, onClose, onSaved }) {
+function EmployeeFormModal({ employee, onClose, onSaved, isViewer }) {
   const isEdit = !!employee;
   const employeeEmail = employee?.profiles?.email || employee?.email || '';
   const [form, setForm] = useState({
@@ -3505,6 +3522,7 @@ function EmployeeFormModal({ employee, onClose, onSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isViewer) return demoBlocked();
     setSaving(true);
     setError('');
 
@@ -3595,11 +3613,12 @@ function EmployeeFormModal({ employee, onClose, onSaved }) {
 // ============================================================
 // NOTIFICATION (SOLICITAÇÃO DE ALTERAÇÃO DE VALOR) DETAIL MODAL
 // ============================================================
-function NotificationDetailModal({ notification, onClose, onResolved }) {
+function NotificationDetailModal({ notification, onClose, onResolved, isViewer }) {
   const [adminNote, setAdminNote] = useState(notification.admin_note || '');
   const [saving, setSaving] = useState(false);
 
   const resolve = async (decision) => {
+    if (isViewer) return demoBlocked();
     setSaving(true);
     if (decision === 'aprovado') {
       await db.from('project_team').update({ payment_value: notification.new_value }).eq('id', notification.project_team_id);
@@ -3697,6 +3716,7 @@ function SalariosPage({ employees, salaryPayments, projectTeam, projects, compan
 
   const togglePaid = async (emp, e) => {
     e.stopPropagation();
+    if (isViewer) return demoBlocked();
     const current = salaryPayments.find(s => s.employee_id === emp.id && s.reference_month === monthKey);
     if (current) {
       const newPaid = !current.paid;
@@ -3839,37 +3859,34 @@ function SalariosPage({ employees, salaryPayments, projectTeam, projects, compan
                   <div className="text-xs text-slate-400 mb-3">{t('sal_obras_total_recebido')(projectsByEmployee(emp).length, fmtCurrency(totalEarnedByEmployee(emp)))}</div>
                   <div className="flex items-center justify-between gap-2">
                     <div className="font-mono text-lg text-blueprint">{fmtCurrency(emp.salary)}</div>
-                    {isViewer ? (
-                      <span className="text-xs text-slate-400">{paid ? t('sal_pago') : t('sal_pendente')}</span>
-                    ) : (
-                      <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer" onClick={e => e.stopPropagation()}>
-                        <input type="checkbox" checked={paid} onChange={(e) => togglePaid(emp, e)} className="w-4 h-4 accent-safety rounded" />
-                        {t('sal_marcar_pago')}
-                      </label>
-                    )}
-                    {!isViewer && (
-                      <div onClick={e => e.stopPropagation()}>
-                        <ArchiveDeleteMenu
-                          archived={emp.archived}
-                          onArchive={async () => {
-                            if (confirm(t('equipe_confirmar_arquivar')(emp.full_name))) {
-                              await db.rpc('archive_employee', { p_employee_id: emp.id });
-                              onChanged();
-                            }
-                          }}
-                          onUnarchive={async () => {
-                            await db.rpc('unarchive_employee', { p_employee_id: emp.id });
+                    <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer" onClick={e => e.stopPropagation()}>
+                      <input type="checkbox" checked={paid} onChange={(e) => togglePaid(emp, e)} className="w-4 h-4 accent-safety rounded" />
+                      {t('sal_marcar_pago')}
+                    </label>
+                    <div onClick={e => e.stopPropagation()}>
+                      <ArchiveDeleteMenu
+                        archived={emp.archived}
+                        onArchive={async () => {
+                          if (isViewer) return demoBlocked();
+                          if (confirm(t('equipe_confirmar_arquivar')(emp.full_name))) {
+                            await db.rpc('archive_employee', { p_employee_id: emp.id });
                             onChanged();
-                          }}
-                          onDelete={async () => {
-                            if (confirm(t('equipe_confirmar_excluir')(emp.full_name))) {
-                              await db.rpc('delete_employee', { p_employee_id: emp.id });
-                              onChanged();
-                            }
-                          }}
-                        />
-                      </div>
-                    )}
+                          }
+                        }}
+                        onUnarchive={async () => {
+                          if (isViewer) return demoBlocked();
+                          await db.rpc('unarchive_employee', { p_employee_id: emp.id });
+                          onChanged();
+                        }}
+                        onDelete={async () => {
+                          if (isViewer) return demoBlocked();
+                          if (confirm(t('equipe_confirmar_excluir')(emp.full_name))) {
+                            await db.rpc('delete_employee', { p_employee_id: emp.id });
+                            onChanged();
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               );
@@ -3907,29 +3924,30 @@ function SalariosPage({ employees, salaryPayments, projectTeam, projects, compan
                       <div className="font-mono text-sm font-semibold text-amber-700">{fmtCurrency(pending)}</div>
                     </div>
                   </div>
-                  {!isViewer && (
-                    <div className="flex justify-end" onClick={e => e.stopPropagation()}>
-                      <ArchiveDeleteMenu
-                        archived={emp.archived}
-                        onArchive={async () => {
-                          if (confirm(t('equipe_confirmar_arquivar')(emp.full_name))) {
-                            await db.rpc('archive_employee', { p_employee_id: emp.id });
-                            onChanged();
-                          }
-                        }}
-                        onUnarchive={async () => {
-                          await db.rpc('unarchive_employee', { p_employee_id: emp.id });
+                  <div className="flex justify-end" onClick={e => e.stopPropagation()}>
+                    <ArchiveDeleteMenu
+                      archived={emp.archived}
+                      onArchive={async () => {
+                        if (isViewer) return demoBlocked();
+                        if (confirm(t('equipe_confirmar_arquivar')(emp.full_name))) {
+                          await db.rpc('archive_employee', { p_employee_id: emp.id });
                           onChanged();
-                        }}
-                        onDelete={async () => {
-                          if (confirm(t('equipe_confirmar_excluir')(emp.full_name))) {
-                            await db.rpc('delete_employee', { p_employee_id: emp.id });
-                            onChanged();
-                          }
-                        }}
-                      />
-                    </div>
-                  )}
+                        }
+                      }}
+                      onUnarchive={async () => {
+                        if (isViewer) return demoBlocked();
+                        await db.rpc('unarchive_employee', { p_employee_id: emp.id });
+                        onChanged();
+                      }}
+                      onDelete={async () => {
+                        if (isViewer) return demoBlocked();
+                        if (confirm(t('equipe_confirmar_excluir')(emp.full_name))) {
+                          await db.rpc('delete_employee', { p_employee_id: emp.id });
+                          onChanged();
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -4059,6 +4077,7 @@ function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paym
   const formatPaidAt = (iso) => iso ? new Date(iso).toLocaleString(_currentCurrency.locale, { dateStyle: 'short', timeStyle: 'short' }) : '';
 
   const confirmFreelancePayment = async ({ paidAt, methods }) => {
+    if (isViewer) return demoBlocked();
     const row = confirming.row;
     await db.from('project_team').update({ payment_status: 'pago', payment_date: paidAt.slice(0, 10), paid_at: paidAt }).eq('id', row.id);
     if (methods.length > 0) {
@@ -4069,12 +4088,14 @@ function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paym
   };
 
   const undoFreelancePayment = async (row) => {
+    if (isViewer) return demoBlocked();
     await db.from('project_team').update({ payment_status: 'pendente', payment_date: null, paid_at: null }).eq('id', row.id);
     await db.from('payment_method_entries').delete().eq('entity_type', 'project_team').eq('entity_id', row.id);
     onChanged();
   };
 
   const confirmSalaryPayment = async ({ paidAt, methods }) => {
+    if (isViewer) return demoBlocked();
     const { employee, existing } = confirming;
     let rowId = existing?.id;
     if (!rowId) {
@@ -4094,6 +4115,7 @@ function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paym
   };
 
   const undoSalaryPayment = async (existing) => {
+    if (isViewer) return demoBlocked();
     if (!existing) return;
     await db.from('salary_payments').update({ paid: false, paid_date: null, paid_at: null }).eq('id', existing.id);
     await db.from('payment_method_entries').delete().eq('entity_type', 'salary_payment').eq('entity_id', existing.id);
@@ -4138,14 +4160,12 @@ function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paym
                   <>
                     <div className="text-xs text-slate-400">{t('pag_pago_em')(formatPaidAt(row.paid_at))}</div>
                     <PaymentMethodsChips entries={entries} />
-                    {!isViewer && (
-                      <button onClick={() => undoFreelancePayment(row)} className="text-xs text-slate-400 hover:text-red-600 mt-2 underline">
-                        {t('pag_desfazer')}
-                      </button>
-                    )}
+                    <button onClick={() => undoFreelancePayment(row)} className="text-xs text-slate-400 hover:text-red-600 mt-2 underline">
+                      {t('pag_desfazer')}
+                    </button>
                   </>
                 ) : (
-                  !isViewer && <Button className="w-full mt-2" onClick={() => setConfirming({ kind: 'freelance', row })}>{t('pag_marcar_pago')}</Button>
+                  <Button className="w-full mt-2" onClick={() => setConfirming({ kind: 'freelance', row })}>{t('pag_marcar_pago')}</Button>
                 )}
               </div>
             );
@@ -4178,14 +4198,12 @@ function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paym
                   <>
                     <div className="text-xs text-slate-400">{t('pag_pago_em')(formatPaidAt(existing.paid_at))}</div>
                     <PaymentMethodsChips entries={entries} />
-                    {!isViewer && (
-                      <button onClick={() => undoSalaryPayment(existing)} className="text-xs text-slate-400 hover:text-red-600 mt-2 underline">
-                        {t('pag_desfazer')}
-                      </button>
-                    )}
+                    <button onClick={() => undoSalaryPayment(existing)} className="text-xs text-slate-400 hover:text-red-600 mt-2 underline">
+                      {t('pag_desfazer')}
+                    </button>
                   </>
                 ) : (
-                  !isViewer && <Button className="w-full mt-2" onClick={() => setConfirming({ kind: 'salary', employee: emp, existing })}>{t('pag_marcar_pago')}</Button>
+                  <Button className="w-full mt-2" onClick={() => setConfirming({ kind: 'salary', employee: emp, existing })}>{t('pag_marcar_pago')}</Button>
                 )}
               </div>
             );
@@ -4321,6 +4339,7 @@ function SalaryHistoryModal({ employee, payments, onClose, onChanged, isViewer }
   const sorted = [...payments].sort((a, b) => b.reference_month.localeCompare(a.reference_month));
 
   const togglePaid = async (row) => {
+    if (isViewer) return demoBlocked();
     const newPaid = !row.paid;
     await db.from('salary_payments').update({ paid: newPaid, paid_date: newPaid ? new Date().toISOString().slice(0, 10) : null }).eq('id', row.id);
     onChanged();
@@ -4342,7 +4361,7 @@ function SalaryHistoryModal({ employee, payments, onClose, onChanged, isViewer }
               return (
                 <label key={row.id} className="flex items-center justify-between gap-3 bg-white border border-slate-100 rounded-xl px-4 py-3 cursor-pointer">
                   <div className="flex items-center gap-3">
-                    <input type="checkbox" checked={row.paid} onChange={() => togglePaid(row)} disabled={isViewer} className="w-4 h-4 accent-safety rounded disabled:opacity-60" />
+                    <input type="checkbox" checked={row.paid} onChange={() => togglePaid(row)} className="w-4 h-4 accent-safety rounded" />
                     <div>
                       <div className="text-sm font-medium text-blueprint">{getMonthNames()[ref.getMonth()]} {ref.getFullYear()}</div>
                       <div className="text-xs text-slate-400">{row.paid ? t('fpm_recebido_em')(fmtDate(row.paid_date)) : t('fpm_vencimento')(fmtDate(row.due_date))}</div>
@@ -4601,6 +4620,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
   };
 
   const saveSummary = async () => {
+    if (isViewer) return demoBlocked();
     const newServiceValue = parseFloat(editServiceValue);
     if (isNaN(newServiceValue) || newServiceValue < 0) return;
     const newTaxRate = editTaxRate !== '' ? parseFloat(editTaxRate) : null;
@@ -4635,6 +4655,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
   };
 
   const applyTotal = async () => {
+    if (isViewer) return demoBlocked();
     setSaving(true);
     await db.from('payment_installments').delete().eq('project_id', project.id);
     await db.from('payment_installments').insert({
@@ -4651,6 +4672,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
   };
 
   const generateParcial = async () => {
+    if (isViewer) return demoBlocked();
     const dp = parseFloat(downPayment);
     if (isNaN(dp) || dp <= 0 || dp >= total) return;
     const remainder = total - dp;
@@ -4690,6 +4712,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
   };
 
   const generateParcelado = async () => {
+    if (isViewer) return demoBlocked();
     const n = parseInt(numInstallments);
     if (!n || n < 2 || !firstDueDate) return;
     setSaving(true);
@@ -4716,6 +4739,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
   };
 
   const updateInstallmentStatus = async (installment, newStatus) => {
+    if (isViewer) return demoBlocked();
     await db.from('payment_installments').update({
       status: newStatus,
       received_date: newStatus === 'recebido' ? new Date().toISOString().slice(0, 10) : null,
@@ -4731,6 +4755,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
   };
 
   const saveInstallment = async (inst) => {
+    if (isViewer) return demoBlocked();
     const newAmount = parseFloat(editInstAmount);
     if (isNaN(newAmount) || newAmount < 0) return;
     await db.from('payment_installments').update({
@@ -4742,6 +4767,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
   };
 
   const deleteInstallment = async (inst) => {
+    if (isViewer) return demoBlocked();
     if (!confirm(t('fpm_confirmar_excluir_parcela'))) return;
     await db.from('payment_installments').delete().eq('id', inst.id);
     await syncReceivedFlag();
@@ -4749,6 +4775,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
   };
 
   const addManualInstallment = async () => {
+    if (isViewer) return demoBlocked();
     const nextNumber = installments.length > 0 ? Math.max(...installments.map(i => i.installment_number)) + 1 : 1;
     await db.from('payment_installments').insert({
       project_id: project.id, company_id: companyId,
@@ -4810,16 +4837,13 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
                 <span>{t('fpm_total_receber')}</span>
                 <span className="font-mono">{fmtCurrency(total)}</span>
               </div>
-              {!isViewer && (
-                <button onClick={startEditingSummary} className="text-xs text-safety font-medium hover:underline flex items-center gap-1 pt-1.5">
-                  <Icon path={ICONS.edit} className="w-3.5 h-3.5" /> {t('fpm_editar_valor_aliquota')}
-                </button>
-              )}
+              <button onClick={startEditingSummary} className="text-xs text-safety font-medium hover:underline flex items-center gap-1 pt-1.5">
+                <Icon path={ICONS.edit} className="w-3.5 h-3.5" /> {t('fpm_editar_valor_aliquota')}
+              </button>
             </>
           )}
         </div>
 
-        {!isViewer && (
         <div>
           <span className="block text-xs font-medium text-slate-500 mb-2">{t('fpm_forma_recebimento')}</span>
           <div className="grid grid-cols-3 gap-2">
@@ -4828,16 +4852,15 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
             {modeBtn('parcelado', t('fpm_parcelado'))}
           </div>
         </div>
-        )}
 
-        {!isViewer && paymentMode === 'total' && project.payment_mode !== 'total' && (
+        {paymentMode === 'total' && project.payment_mode !== 'total' && (
           <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-4 space-y-3">
             <p className="text-xs text-slate-500">{t('fpm_total_texto')}</p>
             <Button onClick={applyTotal} disabled={saving} className="w-full">{saving ? t('fpm_aplicando') : t('fpm_aplicar_total')}</Button>
           </div>
         )}
 
-        {!isViewer && paymentMode === 'parcial' && (
+        {paymentMode === 'parcial' && (
           <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-4 space-y-3">
             <p className="text-xs text-slate-500">{t('fpm_parcial_texto')}</p>
             <Input label={t('fpm_valor_entrada_curr')(currentCurrencySymbol())} type="number" step="0.01" value={downPayment} onChange={e => setDownPayment(e.target.value)} placeholder="0,00" />
@@ -4869,7 +4892,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
           </div>
         )}
 
-        {!isViewer && paymentMode === 'parcelado' && (
+        {paymentMode === 'parcelado' && (
           <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-4 space-y-3">
             <p className="text-xs text-slate-500">{t('fpm_parcelado_texto')}</p>
             <div className="grid grid-cols-2 gap-3">
@@ -4899,7 +4922,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
                         ? (installments.length === 2 ? t('fpm_restante') : t('fpm_parcela_do_restante')(inst.installment_number - 1))
                         : installments.length > 1 ? t('fpm_parcela_n')(inst.installment_number) : t('fpm_pagamento_unico')}
                     </div>
-                    {!isViewer && editingInstallmentId !== inst.id && (
+                    {editingInstallmentId !== inst.id && (
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button onClick={() => startEditingInstallment(inst)} className="text-slate-400 hover:text-safety p-1"><Icon path={ICONS.edit} className="w-3.5 h-3.5" /></button>
                         {installments.length > 1 && (
@@ -4925,16 +4948,12 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <span className="font-mono text-sm text-blueprint">{fmtCurrency(inst.amount)}</span>
-                        {isViewer ? (
-                          <span className={`text-xs font-medium px-2 py-1.5 rounded-lg border ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>{INSTALLMENT_STATUS_LABELS[inst.status]}</span>
-                        ) : (
-                          <select value={inst.status} onChange={e => updateInstallmentStatus(inst, e.target.value)}
-                            className={`text-xs font-medium px-2 py-1.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-safety/30 ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>
-                            <option value="a_receber">{t('fin_status_pendente')}</option>
-                            <option value="atrasada">{t('fin_status_atrasado')}</option>
-                            <option value="recebido">{t('fin_status_recebido')}</option>
-                          </select>
-                        )}
+                        <select value={inst.status} onChange={e => updateInstallmentStatus(inst, e.target.value)}
+                          className={`text-xs font-medium px-2 py-1.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-safety/30 ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>
+                          <option value="a_receber">{t('fin_status_pendente')}</option>
+                          <option value="atrasada">{t('fin_status_atrasado')}</option>
+                          <option value="recebido">{t('fin_status_recebido')}</option>
+                        </select>
                       </div>
                     </div>
                   )}
@@ -4947,11 +4966,9 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
                 <span className="text-amber-600">{t('fpm_diferente_total')(fmtCurrency(total))}</span>
               )}
             </div>
-            {!isViewer && (
-              <button onClick={addManualInstallment} className="mt-2 text-xs text-safety font-medium hover:underline flex items-center gap-1">
-                <Icon path={ICONS.plus} className="w-3.5 h-3.5" /> {t('fpm_adicionar_parcela_manual')}
-              </button>
-            )}
+            <button onClick={addManualInstallment} className="mt-2 text-xs text-safety font-medium hover:underline flex items-center gap-1">
+              <Icon path={ICONS.plus} className="w-3.5 h-3.5" /> {t('fpm_adicionar_parcela_manual')}
+            </button>
           </div>
         )}
       </div>
@@ -5259,7 +5276,7 @@ function ServiceBlock({ s, idx, isTarima, onUpdate, onRemove, canRemove, onOpenC
 // ============================================================
 // QUICK SERVICE MODAL — cadastro rápido de serviço a partir do formulário de obra
 // ============================================================
-function QuickServiceModal({ companyId, onClose, onCreated }) {
+function QuickServiceModal({ companyId, onClose, onCreated, isViewer }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
@@ -5267,6 +5284,7 @@ function QuickServiceModal({ companyId, onClose, onCreated }) {
 
   const save = async (e) => {
     e.preventDefault();
+    if (isViewer) return demoBlocked();
     setSaving(true);
     setError('');
     const { data, error: err } = await db.from('company_services')
@@ -5315,6 +5333,7 @@ function CompanyServicesPage({ companyId, onChanged, isViewer }) {
 
   const save = async (e) => {
     e.preventDefault();
+    if (isViewer) return demoBlocked();
     setSaving(true);
     if (editing) {
       await db.from('company_services').update({ name: form.name, description: form.description, default_pricing_method: form.default_pricing_method || null }).eq('id', editing.id);
@@ -5324,8 +5343,12 @@ function CompanyServicesPage({ companyId, onChanged, isViewer }) {
     setSaving(false); setShowForm(false); load(); onChanged();
   };
 
-  const toggleActive = async (svc) => { await db.from('company_services').update({ active: !svc.active }).eq('id', svc.id); load(); onChanged(); };
+  const toggleActive = async (svc) => {
+    if (isViewer) return demoBlocked();
+    await db.from('company_services').update({ active: !svc.active }).eq('id', svc.id); load(); onChanged();
+  };
   const remove = async (svc) => {
+    if (isViewer) return demoBlocked();
     if (!confirm(t('servicos_confirmar_excluir')(svc.name))) return;
     await db.from('company_services').delete().eq('id', svc.id); load(); onChanged();
   };
@@ -5335,7 +5358,7 @@ function CompanyServicesPage({ companyId, onChanged, isViewer }) {
   return (
     <>
       <PageHeader title={t('servicos_title')} subtitle={t('servicos_subtitle')}
-        action={!isViewer && <Button onClick={openNew}><Icon path={ICONS.plus} className="w-4 h-4"/>{t('servicos_cadastrar')}</Button>} />
+        action={<Button onClick={openNew}><Icon path={ICONS.plus} className="w-4 h-4"/>{t('servicos_cadastrar')}</Button>} />
       {loading ? <Spinner /> : services.length === 0 ? (
         <EmptyState icon="briefcase" title={t('servicos_vazio_titulo')} subtitle={t('servicos_vazio_subtitulo')} />
       ) : (
@@ -5348,19 +5371,17 @@ function CompanyServicesPage({ companyId, onChanged, isViewer }) {
               </div>
               {svc.description && <div className="text-xs text-slate-500 mb-2">{svc.description}</div>}
               {svc.default_pricing_method && <div className="text-xs text-safety font-medium mb-3">{pricingLabels[svc.default_pricing_method]}</div>}
-              {!isViewer && (
-                <div className="flex items-center gap-2 pt-1">
-                  <button onClick={() => openEdit(svc)} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs text-blueprint hover:bg-slate-50">
-                    <Icon path={ICONS.edit} className="w-3.5 h-3.5"/>{t('common_editar')}
-                  </button>
-                  <button onClick={() => toggleActive(svc)} className="px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-500 hover:bg-slate-50">
-                    {svc.active ? t('servicos_desativar') : t('servicos_ativar')}
-                  </button>
-                  <button onClick={() => remove(svc)} className="p-2 rounded-xl border border-red-100 text-red-500 hover:bg-red-50">
-                    <Icon path={ICONS.trash} className="w-3.5 h-3.5"/>
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center gap-2 pt-1">
+                <button onClick={() => openEdit(svc)} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs text-blueprint hover:bg-slate-50">
+                  <Icon path={ICONS.edit} className="w-3.5 h-3.5"/>{t('common_editar')}
+                </button>
+                <button onClick={() => toggleActive(svc)} className="px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-500 hover:bg-slate-50">
+                  {svc.active ? t('servicos_desativar') : t('servicos_ativar')}
+                </button>
+                <button onClick={() => remove(svc)} className="p-2 rounded-xl border border-red-100 text-red-500 hover:bg-red-50">
+                  <Icon path={ICONS.trash} className="w-3.5 h-3.5"/>
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -5383,6 +5404,7 @@ function CompanyServicesPage({ companyId, onChanged, isViewer }) {
 
 function ProjectFormModal({ companyId, company, employees, profile, companyServices, onClose, onSaved, editingProject }) {
   const isEdit = !!editingProject;
+  const isViewer = profile.role === 'viewer';
 
   const [form, setForm] = useState({
     title: editingProject?.title || '',
@@ -5545,6 +5567,7 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isViewer) return demoBlocked();
     setSaving(true);
     setError('');
 
@@ -5919,6 +5942,7 @@ function ProjectFormModal({ companyId, company, employees, profile, companyServi
             setLocalCompanyServices(prev => [...prev, newSvc]);
             setShowQuickService(false);
           }}
+          isViewer={isViewer}
         />
       )}
     </Modal>
@@ -6031,7 +6055,7 @@ function polygonArea(points) {
   return Math.abs(area) / 2;
 }
 
-function MeasurementCalculator({ onClose, onApply, companyId, measurementId, savedName, savedWalls, savedRooms }) {
+function MeasurementCalculator({ onClose, onApply, companyId, measurementId, savedName, savedWalls, savedRooms, isViewer }) {
   const canvasRef = useRef(null);
   const stateRef = useRef({
     walls: savedWalls || [],
@@ -6601,6 +6625,7 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
   };
 
   const handleSave = async () => {
+    if (isViewer) return demoBlocked();
     const s = stateRef.current;
     if (!saveName || !companyId) return;
     setSaving(true);
@@ -6984,6 +7009,7 @@ function MeasurementsPage({ companyId, isViewer }) {
   useEffect(() => { load(); }, [companyId]);
 
   const deleteMeasurement = async (id) => {
+    if (isViewer) return demoBlocked();
     if (!confirm(t('metr_confirmar_excluir'))) return;
     await db.from('measurements').delete().eq('id', id);
     load();
@@ -6994,14 +7020,14 @@ function MeasurementsPage({ companyId, isViewer }) {
   return (
     <>
       <PageHeader title={t('metr_title')} subtitle={t('metr_subtitle')}
-        action={!isViewer && <Button onClick={() => setShowCalculator(true)}><Icon path={ICONS.ruler} className="w-4 h-4"/>{t('metr_nova')}</Button>} />
+        action={<Button onClick={() => setShowCalculator(true)}><Icon path={ICONS.ruler} className="w-4 h-4"/>{t('metr_nova')}</Button>} />
 
       {measurements.length === 0 ? (
         <EmptyState icon="ruler" title={t('metr_vazio_titulo')} subtitle={t('metr_vazio_subtitulo')} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {measurements.map(m => (
-            <div key={m.id} className={"bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow" + (isViewer ? "" : " cursor-pointer")} onClick={() => { if (!isViewer) setViewing(m); }}>
+            <div key={m.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => setViewing(m)}>
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="font-display font-semibold text-blueprint">{m.name}</div>
@@ -7021,16 +7047,14 @@ function MeasurementsPage({ companyId, isViewer }) {
                   return <div className="text-xs text-slate-400 pt-1">{roomsArr.length} {roomsArr.length === 1 ? t('metr_comodo') : t('metr_comodos')}: {roomsArr.map(r => r.name).join(', ')}</div>;
                 })()}
               </div>
-              {!isViewer && (
-                <div className="flex gap-2 mt-4">
-                  <button onClick={e => { e.stopPropagation(); setViewing(m); }} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs text-blueprint hover:bg-slate-50">
-                    <Icon path={ICONS.edit} className="w-3.5 h-3.5"/>{t('metr_abrir')}
-                  </button>
-                  <button onClick={e => { e.stopPropagation(); deleteMeasurement(m.id); }} className="p-2 rounded-xl border border-red-100 text-red-500 hover:bg-red-50">
-                    <Icon path={ICONS.trash} className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+              <div className="flex gap-2 mt-4">
+                <button onClick={e => { e.stopPropagation(); setViewing(m); }} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs text-blueprint hover:bg-slate-50">
+                  <Icon path={ICONS.edit} className="w-3.5 h-3.5"/>{t('metr_abrir')}
+                </button>
+                <button onClick={e => { e.stopPropagation(); deleteMeasurement(m.id); }} className="p-2 rounded-xl border border-red-100 text-red-500 hover:bg-red-50">
+                  <Icon path={ICONS.trash} className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -7041,6 +7065,7 @@ function MeasurementsPage({ companyId, isViewer }) {
           companyId={companyId}
           onClose={() => { setShowCalculator(false); load(); }}
           onApply={null}
+          isViewer={isViewer}
         />
       )}
 
@@ -7053,6 +7078,7 @@ function MeasurementsPage({ companyId, isViewer }) {
           savedRooms={typeof viewing.rooms === 'string' ? JSON.parse(viewing.rooms) : (viewing.rooms || [])}
           onClose={() => { setViewing(null); load(); }}
           onApply={null}
+          isViewer={isViewer}
         />
       )}
     </>
@@ -7077,6 +7103,7 @@ function NotasFiscaisPage({ company, companyId, onCompanyUpdated, isViewer }) {
   const apiKey = company?.emite_facil_api_key || null;
 
   const generateKey = async () => {
+    if (isViewer) return demoBlocked();
     setGenerating(true);
     const newKey = generateApiKey();
     await db.from('companies').update({ emite_facil_api_key: newKey }).eq('id', companyId);
@@ -7118,19 +7145,17 @@ function NotasFiscaisPage({ company, companyId, onCompanyUpdated, isViewer }) {
           <p className="text-sm text-slate-500 mb-6">
             {t('nf_ativar_texto2')}
           </p>
-          {!isViewer && (
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a href={EMITE_FACIL_CHECKOUT_URL} target="_blank" rel="noopener noreferrer">
-                <Button className="w-full sm:w-auto">
-                  <Icon path={ICONS.zap} className="w-4 h-4" />{t('nf_ativar_botao')}
-                </Button>
-              </a>
-              <Button variant="outline" onClick={generateKey} disabled={generating}>
-                <Icon path={ICONS.receipt} className="w-4 h-4" />
-                {generating ? t('nf_gerando') : t('nf_ja_assinei')}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <a href={EMITE_FACIL_CHECKOUT_URL} target="_blank" rel="noopener noreferrer">
+              <Button className="w-full sm:w-auto">
+                <Icon path={ICONS.zap} className="w-4 h-4" />{t('nf_ativar_botao')}
               </Button>
-            </div>
-          )}
+            </a>
+            <Button variant="outline" onClick={generateKey} disabled={generating}>
+              <Icon path={ICONS.receipt} className="w-4 h-4" />
+              {generating ? t('nf_gerando') : t('nf_ja_assinei')}
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="space-y-6 max-w-2xl">
@@ -7152,21 +7177,19 @@ function NotasFiscaisPage({ company, companyId, onCompanyUpdated, isViewer }) {
               {t('nf_abrir_emite_facil')} <Icon path={ICONS.chevron} className="w-3.5 h-3.5" />
             </a>
 
-            {!isViewer && (
-              <div className="mt-4 pt-4 border-t border-slate-100">
-                {!confirmingRegen ? (
-                  <button onClick={() => setConfirmingRegen(true)} className="text-xs text-slate-400 hover:text-red-500">
-                    {t('nf_gerar_nova')}
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-slate-500">{t('nf_confirmar_nova')}</span>
-                    <button onClick={generateKey} disabled={generating} className="text-red-500 font-medium hover:underline">{generating ? t('nf_gerando') : t('nf_sim_gerar_nova')}</button>
-                    <button onClick={() => setConfirmingRegen(false)} className="text-slate-400 hover:underline">{t('nf_cancelar')}</button>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              {!confirmingRegen ? (
+                <button onClick={() => setConfirmingRegen(true)} className="text-xs text-slate-400 hover:text-red-500">
+                  {t('nf_gerar_nova')}
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-slate-500">{t('nf_confirmar_nova')}</span>
+                  <button onClick={generateKey} disabled={generating} className="text-red-500 font-medium hover:underline">{generating ? t('nf_gerando') : t('nf_sim_gerar_nova')}</button>
+                  <button onClick={() => setConfirmingRegen(false)} className="text-slate-400 hover:underline">{t('nf_cancelar')}</button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
@@ -7201,6 +7224,7 @@ function ProjectNotes({ project, profile }) {
 
   const send = async (e) => {
     e.preventDefault();
+    if (isViewer) return demoBlocked();
     if (!message.trim()) return;
     setSending(true);
 
@@ -7270,13 +7294,11 @@ function ProjectNotes({ project, profile }) {
           </div>
         ))}
       </div>
-      {!isViewer && (
-        <form onSubmit={send} className="flex gap-2">
-          <input value={message} onChange={e => setMessage(e.target.value)} placeholder={t('pn_escrever_nota')}
-            className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-safety/30 focus:border-safety" />
-          <Button type="submit" disabled={sending}>{t('pn_enviar')}</Button>
-        </form>
-      )}
+      <form onSubmit={send} className="flex gap-2">
+        <input value={message} onChange={e => setMessage(e.target.value)} placeholder={t('pn_escrever_nota')}
+          className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-safety/30 focus:border-safety" />
+        <Button type="submit" disabled={sending}>{t('pn_enviar')}</Button>
+      </form>
     </div>
   );
 }
@@ -7300,6 +7322,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
   const [nfCopied, setNfCopied] = useState(false);
 
   const emitirNotaFiscal = async () => {
+    if (isViewer) return demoBlocked();
     setNfError('');
     if (!company?.emite_facil_api_key) return;
     setEmittingNF(true);
@@ -7345,6 +7368,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
   };
 
   const saveValue = async () => {
+    if (isViewer) return demoBlocked();
     const newServiceValue = parseFloat(editValue);
     if (isNaN(newServiceValue) || newServiceValue < 0) return;
     let newTotal = newServiceValue;
@@ -7404,6 +7428,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       promoQrCaption: 'Aponte a câmera e conheça', promoContactLabel: 'Quer seu próprio sistema? Fale com a AIVACS:',
       promoWaCta: 'Contate pelo WhatsApp', promoWaMessage: 'Olá, me interessei nos serviços da AIVACS, gostaria de saber mais.',
       contactPhoneLabel: 'Telefone', contactWebsiteLabel: 'Site',
+      demoWatermark: 'PORTFÓLIO DEMONSTRATIVO',
     } : isUS ? {
       docTitle: 'QUOTE', docLabel: 'Professional quote', issuedOn: 'Issued on',
       sectionDetails: 'Project details', sectionServices: 'Services', sectionDescs: 'Detailed descriptions',
@@ -7419,6 +7444,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       promoQrCaption: 'Scan to check it out', promoContactLabel: 'Want your own system? Contact AIVACS:',
       promoWaCta: 'Contact us on WhatsApp', promoWaMessage: "Hi, I'm interested in AIVACS's services, I'd like to know more.",
       contactPhoneLabel: 'Phone', contactWebsiteLabel: 'Website',
+      demoWatermark: 'SAMPLE PORTFOLIO',
     } : {
       docTitle: 'PRESUPUESTO', docLabel: 'Presupuesto profesional', issuedOn: 'Emitido el',
       sectionDetails: 'Datos de la obra', sectionServices: 'Servicios', sectionDescs: 'Descripciones detalladas',
@@ -7434,6 +7460,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
       promoQrCaption: 'Escanea y descúbrelo', promoContactLabel: '¿Quieres tu propio sistema? Contacta con AIVACS:',
       promoWaCta: 'Contacta por WhatsApp', promoWaMessage: 'Hola, me interesan los servicios de AIVACS, me gustaría saber más.',
       contactPhoneLabel: 'Teléfono', contactWebsiteLabel: 'Web',
+      demoWatermark: 'PORTAFOLIO DEMOSTRATIVO',
     };
 
     // Contato da AIVACS e link de assinatura do Obra Organize, conforme o país do documento
@@ -7552,6 +7579,11 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
   .footer-promo-qr img { width: 72px; height: 72px; border-radius: 6px; }
   .footer-promo-qr span { font-size: 9px; color: #94a3b8; text-align: center; max-width: 90px; }
   .status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #f1f5f9; color: #64748b; }
+  .demo-watermark {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-32deg);
+    font-size: 64px; font-weight: 800; letter-spacing: 4px; color: rgba(242,100,26,0.16);
+    white-space: nowrap; z-index: 9999; pointer-events: none;
+  }
   /* Nunca corta uma linha/card ao meio ao paginar — o bloco inteiro pula pra próxima página
      (a seção em si pode continuar na página seguinte, só cada linha/card fica inteiro). */
   tr, .info-item, .footer-promo { page-break-inside: avoid; break-inside: avoid; }
@@ -7560,6 +7592,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
 </style>
 </head>
 <body>
+  ${isViewer ? `<div class="demo-watermark">${txt.demoWatermark}</div>` : ''}
   <div class="header">
     <div class="company-block">
       ${logoUrl ? `<img src="${logoUrl}" class="company-logo" />` : `<div style="width:64px;height:64px;background:#F2641A;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;font-weight:800;">${companyName.charAt(0)}</div>`}
@@ -7653,12 +7686,14 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
   useEffect(() => { loadTeam(); }, []);
 
   const updateStatus = async (newStatus) => {
+    if (isViewer) return demoBlocked();
     setStatus(newStatus);
     await db.from('projects').update({ status: newStatus }).eq('id', project.id);
     onChanged({ ...project, status: newStatus });
   };
 
   const togglePayment = async (teamRow) => {
+    if (isViewer) return demoBlocked();
     const newStatus = teamRow.payment_status === 'pago' ? 'pendente' : 'pago';
     await db.from('project_team').update({ payment_status: newStatus, payment_date: newStatus === 'pago' ? new Date().toISOString().slice(0, 10) : null }).eq('id', teamRow.id);
     loadTeam();
@@ -7666,6 +7701,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
   };
 
   const deleteProject = async () => {
+    if (isViewer) return demoBlocked();
     if (!confirm(t('pd_confirmar_excluir')(project.title))) return;
     setDeleting(true);
     await db.from('projects').delete().eq('id', project.id);
@@ -7674,6 +7710,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
   };
 
   const archiveProject = async () => {
+    if (isViewer) return demoBlocked();
     if (!confirm(t('pd_confirmar_arquivar')(project.title))) return;
     setDeleting(true);
     await db.from('projects').update({ archived: true }).eq('id', project.id);
@@ -7697,7 +7734,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {onEdit && !isViewer && (
+            {onEdit && (
               <button onClick={() => onEdit(project)}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:text-blueprint hover:border-blueprint/30 hover:bg-slate-50 transition-colors">
                 <Icon path={ICONS.edit} className="w-4 h-4" />
@@ -7712,17 +7749,13 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
               </svg>
               {t('pd_gerar_pdf')}
             </button>
-            {isViewer ? (
-              <span className="px-3 py-2 rounded-xl border border-slate-200 text-sm text-blueprint bg-slate-50">{t('status_' + status)}</span>
-            ) : (
-              <Select value={status} onChange={e => updateStatus(e.target.value)}>
-                <option value="rascunho">{t('status_rascunho')}</option>
-                <option value="a_iniciar">{t('status_a_iniciar')}</option>
-                <option value="em_andamento">{t('status_em_andamento')}</option>
-                <option value="entregue">{t('status_entregue')}</option>
-                <option value="atrasada">{t('status_atrasada')}</option>
-              </Select>
-            )}
+            <Select value={status} onChange={e => updateStatus(e.target.value)}>
+              <option value="rascunho">{t('status_rascunho')}</option>
+              <option value="a_iniciar">{t('status_a_iniciar')}</option>
+              <option value="em_andamento">{t('status_em_andamento')}</option>
+              <option value="entregue">{t('status_entregue')}</option>
+              <option value="atrasada">{t('status_atrasada')}</option>
+            </Select>
           </div>
         </div>
 
@@ -7818,7 +7851,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
                 return (
                 <label key={t2.id} className="flex items-center justify-between gap-3 bg-white border border-slate-100 rounded-xl px-4 py-3 cursor-pointer">
                   <div className="flex items-center gap-3">
-                    <input type="checkbox" checked={naoRastreadoPorObra ? true : t2.payment_status === 'pago'} disabled={naoRastreadoPorObra || isViewer} onChange={() => togglePayment(t2)} className="w-4 h-4 accent-safety rounded disabled:opacity-100" />
+                    <input type="checkbox" checked={naoRastreadoPorObra ? true : t2.payment_status === 'pago'} disabled={naoRastreadoPorObra} onChange={() => togglePayment(t2)} className="w-4 h-4 accent-safety rounded disabled:opacity-100" />
                     <div>
                       <div className="text-sm font-medium text-blueprint">{t2.is_self ? t('pd_voce_mesmo')(t2.profiles?.full_name || t('pd_voce')) : t2.employees?.full_name}</div>
                       <div className="text-xs text-slate-400">
@@ -7841,7 +7874,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
           <div className="bg-white border border-slate-100 rounded-xl px-4 py-3 space-y-2">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-slate-500">{t('pd_valor_real_servico')}</span>
-              {editingValue && !isViewer ? (
+              {editingValue ? (
                 <div className="flex items-center gap-2">
                   <input
                     type="number" step="0.01" value={editValue}
@@ -7853,10 +7886,6 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
                   <button onClick={saveValue} className="text-emerald-600 hover:text-emerald-700 p-1"><Icon path={ICONS.check} className="w-4 h-4" /></button>
                   <button onClick={() => setEditingValue(false)} className="text-slate-400 hover:text-slate-600 p-1"><Icon path={ICONS.x} className="w-4 h-4" /></button>
                 </div>
-              ) : isViewer ? (
-                <span className="font-mono text-sm text-blueprint">
-                  {fmtCurrency(project.service_value ?? ((project.amount_to_receive || project.budget || 0) - (project.tax_amount || 0)))}
-                </span>
               ) : (
                 <button onClick={() => {
                   setEditValue(project.service_value ?? ((project.amount_to_receive || project.budget || 0) - (project.tax_amount || 0)));
@@ -7915,7 +7944,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
           </button>
         </div>
 
-        {company?.emite_facil_api_key && company?.country !== 'US' && (project.nf_link || !isViewer) && (
+        {company?.emite_facil_api_key && company?.country !== 'US' && (
           <div>
             <h4 className="font-display font-semibold text-sm mb-2">{t('pd_nota_fiscal')}</h4>
             {project.nf_link ? (
@@ -7933,23 +7962,22 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
                 {nfCopied && <div className="text-xs text-emerald-600 mt-1.5">{t('pd_link_copiado')}</div>}
                 <p className="text-xs text-slate-500 mt-2">{t('pd_envie_link')}</p>
               </div>
-            ) : !isViewer ? (
+            ) : (
               <div>
                 <Button onClick={emitirNotaFiscal} disabled={emittingNF} className="w-full">
                   <Icon path={ICONS.receipt} className="w-4 h-4" />{emittingNF ? t('nf_gerando') : t('pd_emitir_nota')}
                 </Button>
                 {nfError && <p className="text-xs text-red-500 mt-2">{nfError}</p>}
               </div>
-            ) : null}
+            )}
           </div>
         )}
 
         <ProjectNotes project={project} profile={profile} />
 
-        {!isViewer && (
-          <div className="border-t border-slate-100 pt-4 flex gap-2">
+        <div className="border-t border-slate-100 pt-4 flex gap-2">
             {project.archived ? (
-              <button type="button" onClick={async () => { setDeleting(true); await db.from('projects').update({ archived: false }).eq('id', project.id); setDeleting(false); onDeleted(); }} disabled={deleting}
+              <button type="button" onClick={async () => { if (isViewer) return demoBlocked(); setDeleting(true); await db.from('projects').update({ archived: false }).eq('id', project.id); setDeleting(false); onDeleted(); }} disabled={deleting}
                 className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50">
                 <Icon path={ICONS.unarchive} className="w-4 h-4" />
                 {t('pd_reativar_obra')}
@@ -7966,8 +7994,7 @@ function ProjectDetailModal({ project, profile, company, onClose, onChanged, onD
               <Icon path={ICONS.trash} className="w-4 h-4" />
               {deleting ? t('servicos_salvando') : t('common_excluir_definitivo')}
             </button>
-          </div>
-        )}
+        </div>
       </div>
     </Modal>
   );
