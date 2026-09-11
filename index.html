@@ -330,6 +330,7 @@ const UI_TEXT = {
     cli_buscar_ou_criar_placeholder: 'Buscar cliente ou digitar um novo...',
     cli_nenhum_cadastrado: 'Nenhum cliente cadastrado ainda',
     cli_adicionar_novo: (name) => `Adicionar novo cliente: "${name}"`,
+    cli_usar_so_nesta_obra: (name) => `Usar "${name}" só nesta obra (não cadastrar)`,
     servicos_descricao_label: 'Descrição do serviço', servicos_descricao_placeholder: 'Breve descrição do serviço (opcional)',
     servicos_salvar: 'Salvar', servicos_salvando: 'Salvando...', servicos_cancelar: 'Cancelar', servicos_editar_titulo: 'Editar',
     pricing_m2: 'Metro quadrado', pricing_unidade: 'Quantidade de tarimas', pricing_empreita: 'Empreita', pricing_diaria: 'Diária', pricing_hora: 'Por hora', pricing_valor_livre: 'Valor livre',
@@ -701,6 +702,7 @@ const UI_TEXT = {
     cli_buscar_ou_criar_placeholder: 'Buscar cliente o escribir uno nuevo...',
     cli_nenhum_cadastrado: 'Ningún cliente registrado todavía',
     cli_adicionar_novo: (name) => `Agregar nuevo cliente: "${name}"`,
+    cli_usar_so_nesta_obra: (name) => `Usar "${name}" solo en esta obra (no registrar)`,
     servicos_descricao_label: 'Descripción del servicio', servicos_descricao_placeholder: 'Breve descripción del servicio (opcional)',
     servicos_salvar: 'Guardar', servicos_salvando: 'Guardando...', servicos_cancelar: 'Cancelar', servicos_editar_titulo: 'Editar',
     pricing_m2: 'Metro cuadrado', pricing_unidade: 'Cantidad de tarimas', pricing_empreita: 'Precio fijo', pricing_diaria: 'Por día', pricing_hora: 'Por hora', pricing_valor_livre: 'Valor libre',
@@ -1072,6 +1074,7 @@ const UI_TEXT = {
     cli_buscar_ou_criar_placeholder: 'Search a client or type a new one...',
     cli_nenhum_cadastrado: 'No clients registered yet',
     cli_adicionar_novo: (name) => `Add new client: "${name}"`,
+    cli_usar_so_nesta_obra: (name) => `Use "${name}" for this project only (don't save)`,
     servicos_descricao_label: 'Service description', servicos_descricao_placeholder: 'Short service description (optional)',
     servicos_salvar: 'Save', servicos_salvando: 'Saving...', servicos_cancelar: 'Cancel', servicos_editar_titulo: 'Edit',
     pricing_m2: 'Square meter', pricing_unidade: 'Flooring quantity', pricing_empreita: 'Fixed price', pricing_diaria: 'Daily rate', pricing_hora: 'Hourly rate', pricing_valor_livre: 'Free amount',
@@ -5635,6 +5638,16 @@ function ClientPicker({ label, clientName, onSelect, clients, onClientCreated, c
     if (data) { onClientCreated(data); pick(data); }
   };
 
+  // Cliente esporádico: usa o nome digitado só nesta obra, sem criar registro no
+  // catálogo de Clientes (pensado pra quem não é cliente recorrente).
+  const useOnceOnly = () => {
+    const name = search.trim();
+    if (!name) return;
+    onSelect(name, null);
+    setOpen(false);
+    setSearch('');
+  };
+
   const clear = (e) => { e.stopPropagation(); onSelect('', null); };
 
   return (
@@ -5675,11 +5688,18 @@ function ClientPicker({ label, clientName, onSelect, clients, onClientCreated, c
                 </button>
               ))}
               {search.trim() && !exactMatch && (
-                <button type="button" onClick={createAndPick} disabled={creating}
-                  className="w-full text-left px-4 py-2.5 text-sm text-safety font-medium hover:bg-safety/5 transition-colors flex items-center gap-1.5 border-t border-slate-100">
-                  <Icon path={ICONS.plus} className="w-3.5 h-3.5"/>
-                  {creating ? t('servicos_salvando') : t('cli_adicionar_novo')(search.trim())}
-                </button>
+                <div className="border-t border-slate-100">
+                  <button type="button" onClick={createAndPick} disabled={creating}
+                    className="w-full text-left px-4 py-2.5 text-sm text-safety font-medium hover:bg-safety/5 transition-colors flex items-center gap-1.5">
+                    <Icon path={ICONS.plus} className="w-3.5 h-3.5"/>
+                    {creating ? t('servicos_salvando') : t('cli_adicionar_novo')(search.trim())}
+                  </button>
+                  <button type="button" onClick={useOnceOnly}
+                    className="w-full text-left px-4 py-2.5 text-sm text-slate-500 hover:bg-slate-50 transition-colors flex items-center gap-1.5">
+                    <Icon path={ICONS.check} className="w-3.5 h-3.5 text-slate-400"/>
+                    {t('cli_usar_so_nesta_obra')(search.trim())}
+                  </button>
+                </div>
               )}
             </div>
           </div>
