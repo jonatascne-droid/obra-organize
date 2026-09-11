@@ -267,6 +267,12 @@ const UI_TEXT = {
     fin_inclui_imposto: 'Inclui', fin_de_imposto: 'de imposto',
     fin_status_recebido: 'Recebido', fin_status_pendente: 'Pendente', fin_status_atrasado: 'Atrasado', fin_status_parcelas: 'parcelas',
     common_editar: 'Editar', common_reativar: 'Reativar', common_arquivar: 'Arquivar', common_mantem_dados: 'mantém dados', common_excluir_definitivo: 'Excluir definitivamente',
+    busca_sem_resultado: 'Nenhum resultado encontrado.',
+    busca_obras_placeholder: 'Buscar por nome, cliente ou valor...',
+    busca_equipe_placeholder: 'Buscar por nome, e-mail ou salário...',
+    busca_pagamentos_placeholder: 'Buscar por nome, obra ou valor...',
+    busca_servicos_placeholder: 'Buscar por nome ou descrição...',
+    busca_metragens_placeholder: 'Buscar por nome...',
     equipe_title: 'Equipe', equipe_subtitle: 'Colaboradores cadastrados na sua empresa', equipe_cadastrar: 'Cadastrar colaborador',
     equipe_mostrar_arquivados: 'Mostrar arquivados',
     equipe_vazio_titulo: 'Nenhum colaborador cadastrado', equipe_vazio_subtitulo: 'Cadastre os membros da sua equipe para começar a montar suas obras.',
@@ -639,6 +645,12 @@ const UI_TEXT = {
     fin_inclui_imposto: 'Incluye', fin_de_imposto: 'de impuesto',
     fin_status_recebido: 'Cobrado', fin_status_pendente: 'Pendiente', fin_status_atrasado: 'Atrasado', fin_status_parcelas: 'cuotas',
     common_editar: 'Editar', common_reativar: 'Reactivar', common_arquivar: 'Archivar', common_mantem_dados: 'conserva los datos', common_excluir_definitivo: 'Eliminar definitivamente',
+    busca_sem_resultado: 'Ningún resultado encontrado.',
+    busca_obras_placeholder: 'Buscar por nombre, cliente o valor...',
+    busca_equipe_placeholder: 'Buscar por nombre, correo o salario...',
+    busca_pagamentos_placeholder: 'Buscar por nombre, obra o valor...',
+    busca_servicos_placeholder: 'Buscar por nombre o descripción...',
+    busca_metragens_placeholder: 'Buscar por nombre...',
     equipe_title: 'Equipo', equipe_subtitle: 'Colaboradores registrados en tu empresa', equipe_cadastrar: 'Registrar colaborador',
     equipe_mostrar_arquivados: 'Mostrar archivados',
     equipe_vazio_titulo: 'Ningún colaborador registrado', equipe_vazio_subtitulo: 'Registra los miembros de tu equipo para empezar a organizar tus obras.',
@@ -1011,6 +1023,12 @@ const UI_TEXT = {
     fin_inclui_imposto: 'Includes', fin_de_imposto: 'in tax',
     fin_status_recebido: 'Received', fin_status_pendente: 'Pending', fin_status_atrasado: 'Overdue', fin_status_parcelas: 'installments',
     common_editar: 'Edit', common_reativar: 'Reactivate', common_arquivar: 'Archive', common_mantem_dados: 'keeps data', common_excluir_definitivo: 'Delete permanently',
+    busca_sem_resultado: 'No results found.',
+    busca_obras_placeholder: 'Search by name, client or value...',
+    busca_equipe_placeholder: 'Search by name, email or salary...',
+    busca_pagamentos_placeholder: 'Search by name, project or value...',
+    busca_servicos_placeholder: 'Search by name or description...',
+    busca_metragens_placeholder: 'Search by name...',
     equipe_title: 'Team', equipe_subtitle: "Team members registered at your company", equipe_cadastrar: 'Add team member',
     equipe_mostrar_arquivados: 'Show archived',
     equipe_vazio_titulo: 'No team members yet', equipe_vazio_subtitulo: 'Add your team members to start building your projects.',
@@ -2401,6 +2419,17 @@ const PageHeader = ({ title, subtitle, action }) => (
   </div>
 );
 
+// Campo de busca reutilizado nas listas em cards (obras, equipe, clientes, pagos...) —
+// filtra tanto por nome/título quanto por valor, já que o texto digitado é comparado
+// direto contra os campos exibidos no card (inclusive o valor já formatado em moeda).
+const SearchBox = ({ value, onChange, placeholder, className = '' }) => (
+  <div className={`mb-4 relative max-w-sm ${className}`}>
+    <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-safety/30 focus:border-safety" />
+  </div>
+);
+
 // ============================================================
 // PROGRAMMER (DEV) AREA
 // ============================================================
@@ -3108,6 +3137,8 @@ function AdminArea({ profile, onLogout }) {
   const [viewingSalaryEmployee, setViewingSalaryEmployee] = useState(null);
   const [showArchivedEmployees, setShowArchivedEmployees] = useState(false);
   const [showArchivedProjects, setShowArchivedProjects] = useState(false);
+  const [searchObras, setSearchObras] = useState('');
+  const [searchEquipe, setSearchEquipe] = useState('');
   const [companyServices, setCompanyServices] = useState([]);
   const [companyClients, setCompanyClients] = useState([]);
   const [editingCompany, setEditingCompany] = useState(false);
@@ -3262,17 +3293,25 @@ function AdminArea({ profile, onLogout }) {
         <>
           <PageHeader title={t('obras_title')} subtitle={t('obras_subtitle')}
             action={<Button onClick={() => setShowProjectForm(true)}><Icon path={ICONS.plus} className="w-4 h-4"/>{t('obras_cadastrar')}</Button>} />
-          <div className="flex items-center justify-end mb-4">
-            <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <SearchBox value={searchObras} onChange={setSearchObras} placeholder={t('busca_obras_placeholder')} className="mb-0 flex-1" />
+            <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer flex-shrink-0">
               <input type="checkbox" checked={showArchivedProjects} onChange={e => setShowArchivedProjects(e.target.checked)} className="w-4 h-4 accent-safety rounded" />
               {t('obras_mostrar_arquivadas')}
             </label>
           </div>
-          {projects.filter(p => showArchivedProjects || !p.archived).length === 0 ? (
-            <EmptyState icon="briefcase" title={t('obras_vazio_titulo')} subtitle={t('obras_vazio_subtitulo')} />
+          {(() => {
+            const q = searchObras.trim().toLowerCase();
+            const obrasFiltered = projects.filter(p => (showArchivedProjects || !p.archived) && (!q ||
+              p.title?.toLowerCase().includes(q) ||
+              p.client_name?.toLowerCase().includes(q) ||
+              p.address?.toLowerCase().includes(q) ||
+              fmtCurrency(p.amount_to_receive || p.budget).toLowerCase().includes(q)));
+            return obrasFiltered.length === 0 ? (
+            <EmptyState icon="briefcase" title={t('obras_vazio_titulo')} subtitle={q ? t('busca_sem_resultado') : t('obras_vazio_subtitulo')} />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {projects.filter(p => showArchivedProjects || !p.archived).map(p => (
+              {obrasFiltered.map(p => (
                 <div key={p.id} onClick={() => setViewingProject(p)} className={`bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${p.archived ? 'border-slate-200 opacity-60' : 'border-slate-100'}`}>
                   <div className="flex items-start justify-between mb-2">
                     <div className="font-display font-semibold text-blueprint">{p.title}</div>
@@ -3289,7 +3328,8 @@ function AdminArea({ profile, onLogout }) {
                 </div>
               ))}
             </div>
-          )}
+          );
+          })()}
         </>
       )}
 
@@ -3297,17 +3337,25 @@ function AdminArea({ profile, onLogout }) {
         <>
           <PageHeader title={t('equipe_title')} subtitle={t('equipe_subtitle')}
             action={<Button onClick={() => setShowEmployeeForm(true)}><Icon path={ICONS.plus} className="w-4 h-4"/>{t('equipe_cadastrar')}</Button>} />
-          <div className="flex items-center justify-end mb-4">
-            <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <SearchBox value={searchEquipe} onChange={setSearchEquipe} placeholder={t('busca_equipe_placeholder')} className="mb-0 flex-1" />
+            <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer flex-shrink-0">
               <input type="checkbox" checked={showArchivedEmployees} onChange={e => setShowArchivedEmployees(e.target.checked)} className="w-4 h-4 accent-safety rounded" />
               {t('equipe_mostrar_arquivados')}
             </label>
           </div>
-          {employees.filter(e => showArchivedEmployees || !e.archived).length === 0 ? (
-            <EmptyState icon="users" title={t('equipe_vazio_titulo')} subtitle={t('equipe_vazio_subtitulo')} />
+          {(() => {
+            const q = searchEquipe.trim().toLowerCase();
+            const equipeFiltered = employees.filter(e => (showArchivedEmployees || !e.archived) && (!q ||
+              e.full_name?.toLowerCase().includes(q) ||
+              e.profiles?.email?.toLowerCase().includes(q) ||
+              e.address?.toLowerCase().includes(q) ||
+              (e.employment_type === 'registered' && fmtCurrency(e.salary).toLowerCase().includes(q))));
+            return equipeFiltered.length === 0 ? (
+            <EmptyState icon="users" title={t('equipe_vazio_titulo')} subtitle={q ? t('busca_sem_resultado') : t('equipe_vazio_subtitulo')} />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {employees.filter(e => showArchivedEmployees || !e.archived).map(e => (
+              {equipeFiltered.map(e => (
                 <div key={e.id} className={`bg-white rounded-2xl border p-5 shadow-sm ${e.archived ? 'border-slate-200 opacity-60' : 'border-slate-100'}`}>
                   <div className="flex items-start justify-between mb-2">
                     <div className="font-display font-semibold text-blueprint">{e.full_name}</div>
@@ -3356,7 +3404,8 @@ function AdminArea({ profile, onLogout }) {
                 </div>
               ))}
             </div>
-          )}
+          );
+          })()}
         </>
       )}
 
@@ -3775,13 +3824,17 @@ function nextSalaryDueInfo(emp, salaryPayments) {
 function SalariosPage({ employees, salaryPayments, projectTeam, projects, companyId, onChanged, onViewHistory, isViewer }) {
   const [viewingEmployee, setViewingEmployee] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [search, setSearch] = useState('');
   const monthKey = currentMonthKey();
   const monthLabel = new Date(monthKey + 'T00:00:00').toLocaleDateString(t('sal_locale'), { month: 'long', year: 'numeric' });
 
   const activeEmployees = employees.filter(e => !e.archived);
   const registeredActive = activeEmployees.filter(e => e.employment_type === 'registered');
   const freelanceActive = activeEmployees.filter(e => e.employment_type === 'freelance');
-  const visibleEmployees = employees.filter(e => showArchived || !e.archived);
+  const q = search.trim().toLowerCase();
+  const matchesSearch = (e) => !q || e.full_name?.toLowerCase().includes(q) ||
+    (e.employment_type === 'registered' && fmtCurrency(e.salary).toLowerCase().includes(q));
+  const visibleEmployees = employees.filter(e => (showArchived || !e.archived) && matchesSearch(e));
   const registered = visibleEmployees.filter(e => e.employment_type === 'registered');
   const freelance = visibleEmployees.filter(e => e.employment_type === 'freelance');
 
@@ -3899,8 +3952,8 @@ function SalariosPage({ employees, salaryPayments, projectTeam, projects, compan
       )}
 
       {/* Registered employees — salary control */}
-      <div className="flex items-center justify-between mb-4">
-        <div />
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <SearchBox value={search} onChange={setSearch} placeholder={t('busca_equipe_placeholder')} className="mb-0 flex-1" />
         {employees.some(e => e.archived) && (
           <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer">
             <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} className="w-4 h-4 accent-safety rounded" />
@@ -4132,17 +4185,25 @@ function PaymentConfirmModal({ amount, onClose, onConfirm }) {
 // ============================================================
 function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paymentMethodEntries, companyId, onChanged, isViewer }) {
   const [confirming, setConfirming] = useState(null); // { kind: 'freelance', row } | { kind: 'salary', employee, existing }
+  const [search, setSearch] = useState('');
   const monthKey = currentMonthKey();
   const monthLabel = new Date(monthKey + 'T00:00:00').toLocaleDateString(t('sal_locale'), { month: 'long', year: 'numeric' });
   const today = new Date().toISOString().slice(0, 10);
 
   const activeEmployees = employees.filter(e => !e.archived);
+  const q = search.trim().toLowerCase();
   const freelanceRows = (projectTeam || []).filter(row => {
     if (row.is_self) return false;
     const emp = activeEmployees.find(e => e.id === row.employee_id);
-    return emp && emp.employment_type === 'freelance';
+    if (!emp || emp.employment_type !== 'freelance') return false;
+    if (!q) return true;
+    const project = (projects || []).find(p => p.id === row.project_id);
+    return emp.full_name?.toLowerCase().includes(q) ||
+      project?.title?.toLowerCase().includes(q) ||
+      fmtCurrency(row.payment_value).toLowerCase().includes(q);
   });
-  const registeredEmployees = activeEmployees.filter(e => e.employment_type === 'registered');
+  const registeredEmployees = activeEmployees.filter(e => e.employment_type === 'registered' && (!q ||
+    e.full_name?.toLowerCase().includes(q) || fmtCurrency(e.salary).toLowerCase().includes(q)));
 
   const methodsFor = (entityType, entityId) => (paymentMethodEntries || []).filter(m => m.entity_type === entityType && m.entity_id === entityId);
 
@@ -4207,6 +4268,7 @@ function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paym
   return (
     <>
       <PageHeader title={t('pag_title')} subtitle={t('pag_subtitle')} />
+      <SearchBox value={search} onChange={setSearch} placeholder={t('busca_pagamentos_placeholder')} />
 
       <h2 className="font-display font-semibold text-lg mb-4">{t('pag_secao_autonomos')}</h2>
       {freelanceRows.length === 0 ? (
@@ -4457,6 +4519,7 @@ function FinanceiroPage({ projects, companyId, salarySummary, onChanged, autoOpe
   const [viewingProject, setViewingProject] = useState(null);
   const [installmentsByProject, setInstallmentsByProject] = useState({});
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   const loadInstallments = async () => {
     const { data } = await db.from('payment_installments').select('*').eq('company_id', companyId).order('installment_number');
@@ -4622,11 +4685,20 @@ function FinanceiroPage({ projects, companyId, salarySummary, onChanged, autoOpe
       )}
 
       <h2 className="font-display font-semibold text-lg mb-4">{t('obras_title')}</h2>
-      {activeProjects.length === 0 ? (
-        <EmptyState icon={currentCurrencyIcon()} title={t('fin_obras_vazio_titulo')} subtitle={t('fin_obras_vazio_subtitulo')} />
+      {activeProjects.length > 0 && (
+        <SearchBox value={search} onChange={setSearch} placeholder={t('busca_obras_placeholder')} />
+      )}
+      {(() => {
+        const q = search.trim().toLowerCase();
+        const filtered = activeProjects.filter(p => !q ||
+          p.title?.toLowerCase().includes(q) ||
+          p.client_name?.toLowerCase().includes(q) ||
+          fmtCurrency(p.amount_to_receive || p.budget).toLowerCase().includes(q));
+        return filtered.length === 0 ? (
+        <EmptyState icon={currentCurrencyIcon()} title={q ? t('busca_sem_resultado') : t('fin_obras_vazio_titulo')} subtitle={q ? '' : t('fin_obras_vazio_subtitulo')} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {activeProjects.map(p => {
+          {filtered.map(p => {
             const st = statusFor(p);
             return (
               <div key={p.id} onClick={() => setViewingProject(p)} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
@@ -4653,7 +4725,8 @@ function FinanceiroPage({ projects, companyId, salarySummary, onChanged, autoOpe
             );
           })}
         </div>
-      )}
+      );
+      })()}
 
       {viewingProject && (
         <FinanceiroProjectModal
@@ -5419,6 +5492,7 @@ function QuickServiceModal({ companyId, onClose, onCreated, isViewer }) {
 function CompanyServicesPage({ companyId, onChanged, isViewer }) {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', description: '', default_pricing_method: '' });
@@ -5462,11 +5536,17 @@ function CompanyServicesPage({ companyId, onChanged, isViewer }) {
     <>
       <PageHeader title={t('servicos_title')} subtitle={t('servicos_subtitle')}
         action={<Button onClick={openNew}><Icon path={ICONS.plus} className="w-4 h-4"/>{t('servicos_cadastrar')}</Button>} />
-      {loading ? <Spinner /> : services.length === 0 ? (
-        <EmptyState icon="briefcase" title={t('servicos_vazio_titulo')} subtitle={t('servicos_vazio_subtitulo')} />
+      {services.length > 0 && (
+        <SearchBox value={search} onChange={setSearch} placeholder={t('busca_servicos_placeholder')} />
+      )}
+      {(() => {
+        const q = search.trim().toLowerCase();
+        const filtered = services.filter(svc => !q || svc.name?.toLowerCase().includes(q) || svc.description?.toLowerCase().includes(q));
+        return loading ? <Spinner /> : filtered.length === 0 ? (
+        <EmptyState icon="briefcase" title={q ? t('busca_sem_resultado') : t('servicos_vazio_titulo')} subtitle={q ? '' : t('servicos_vazio_subtitulo')} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {services.map(svc => (
+          {filtered.map(svc => (
             <div key={svc.id} className={`bg-white rounded-2xl border p-5 shadow-sm ${!svc.active ? 'opacity-50 border-slate-200' : 'border-slate-100'}`}>
               <div className="flex items-start justify-between mb-2">
                 <div className="font-display font-semibold text-blueprint">{svc.name}</div>
@@ -5488,7 +5568,8 @@ function CompanyServicesPage({ companyId, onChanged, isViewer }) {
             </div>
           ))}
         </div>
-      )}
+      );
+      })()}
       {showForm && (
         <Modal title={editing ? t('servicos_editar_titulo') : t('servicos_cadastrar')} onClose={() => setShowForm(false)}>
           <form onSubmit={save} className="space-y-4">
@@ -7328,6 +7409,7 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
 function MeasurementsPage({ companyId, isViewer }) {
   const [measurements, setMeasurements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [viewing, setViewing] = useState(null);
   const [showCalculator, setShowCalculator] = useState(false);
 
@@ -7353,11 +7435,17 @@ function MeasurementsPage({ companyId, isViewer }) {
       <PageHeader title={t('metr_title')} subtitle={t('metr_subtitle')}
         action={<Button onClick={() => setShowCalculator(true)}><Icon path={ICONS.ruler} className="w-4 h-4"/>{t('metr_nova')}</Button>} />
 
-      {measurements.length === 0 ? (
-        <EmptyState icon="ruler" title={t('metr_vazio_titulo')} subtitle={t('metr_vazio_subtitulo')} />
+      {measurements.length > 0 && (
+        <SearchBox value={search} onChange={setSearch} placeholder={t('busca_metragens_placeholder')} />
+      )}
+      {(() => {
+        const q = search.trim().toLowerCase();
+        const filteredMeasurements = measurements.filter(m => !q || m.name?.toLowerCase().includes(q));
+        return filteredMeasurements.length === 0 ? (
+        <EmptyState icon="ruler" title={q ? t('busca_sem_resultado') : t('metr_vazio_titulo')} subtitle={q ? '' : t('metr_vazio_subtitulo')} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {measurements.map(m => (
+          {filteredMeasurements.map(m => (
             <div key={m.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => setViewing(m)}>
               <div className="flex items-start justify-between mb-3">
                 <div>
@@ -7389,7 +7477,8 @@ function MeasurementsPage({ companyId, isViewer }) {
             </div>
           ))}
         </div>
-      )}
+      );
+      })()}
 
       {showCalculator && (
         <MeasurementCalculator
