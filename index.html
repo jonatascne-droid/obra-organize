@@ -1426,6 +1426,10 @@ const Input = ({ label, ...props }) => (
   <label className="block">
     {label && <span className="block text-xs font-medium text-slate-500 mb-1.5">{label}</span>}
     <input {...props}
+      // Em campos numéricos, o scroll do mouse sobre o input focado muda o valor sem
+      // querer (comportamento padrão do navegador) — tirando o foco no wheel, o scroll
+      // só rola a página normalmente, sem mexer no número digitado.
+      onWheel={props.type === 'number' ? (e) => e.target.blur() : props.onWheel}
       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-blueprint placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-safety/30 focus:border-safety transition-all" />
   </label>
 );
@@ -4085,6 +4089,7 @@ function PaymentConfirmModal({ amount, onClose, onConfirm }) {
                 </Select>
               </div>
               <input type="number" step="0.01" value={m.amount} onChange={e => updateMethod(m.id, 'amount', e.target.value)}
+                onWheel={e => e.target.blur()}
                 placeholder={t('pag_valor_placeholder')}
                 className="w-28 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-blueprint focus:outline-none focus:ring-2 focus:ring-safety/30 focus:border-safety" />
               {methods.length > 1 && (
@@ -4889,11 +4894,13 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
               <div className="flex items-center justify-between gap-3">
                 <span className="text-slate-500 flex-shrink-0">{t('fpm_valor_servico_curr')(currentCurrencySymbol())}</span>
                 <input type="number" step="0.01" value={editServiceValue} onChange={e => setEditServiceValue(e.target.value)}
+                  onWheel={e => e.target.blur()}
                   className="w-32 px-2.5 py-1 rounded-lg border border-safety text-sm font-mono text-blueprint text-right focus:outline-none focus:ring-2 focus:ring-safety/30" />
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-slate-500 flex-shrink-0">{t('fpm_aliquota_pct')}</span>
                 <input type="number" step="0.01" value={editTaxRate} onChange={e => setEditTaxRate(e.target.value)} placeholder={t('fpm_sem_imposto')}
+                  onWheel={e => e.target.blur()}
                   className="w-32 px-2.5 py-1 rounded-lg border border-safety text-sm font-mono text-blueprint text-right focus:outline-none focus:ring-2 focus:ring-safety/30" />
               </div>
               <p className="text-xs text-slate-400 pt-1">{t('fpm_aliquota_ajuda')}</p>
@@ -5022,6 +5029,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
                   {editingInstallmentId === inst.id ? (
                     <div className="flex items-center gap-2">
                       <input type="number" step="0.01" value={editInstAmount} onChange={e => setEditInstAmount(e.target.value)}
+                        onWheel={e => e.target.blur()}
                         className="w-24 px-2 py-1.5 rounded-lg border border-safety text-sm font-mono text-blueprint focus:outline-none focus:ring-2 focus:ring-safety/30" />
                       <input type="date" value={editInstDate} onChange={e => setEditInstDate(e.target.value)}
                         className="flex-1 px-2 py-1.5 rounded-lg border border-safety text-sm text-blueprint focus:outline-none focus:ring-2 focus:ring-safety/30" />
@@ -7164,12 +7172,14 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
                     <div className="text-slate-400 mb-1">{t('mc_comprimento_curto')}</div>
                     <input type="number" step="0.01" value={wallEditLength}
                       onChange={e => { setWallEditLength(e.target.value); updateSelectedWallDims('length', e.target.value); }}
+                      onWheel={e => e.target.blur()}
                       className="w-full bg-transparent font-mono font-semibold text-blueprint focus:outline-none" />
                   </div>
                   <div className="bg-slate-50 rounded-lg p-2">
                     <div className="text-slate-400 mb-1">{t('mc_angulo_curto')}</div>
                     <input type="number" step="1" value={wallEditAngle}
                       onChange={e => { setWallEditAngle(e.target.value); updateSelectedWallDims('angle', e.target.value); }}
+                      onWheel={e => e.target.blur()}
                       className="w-full bg-transparent font-mono font-semibold text-blueprint focus:outline-none" />
                   </div>
                   {selWall.height > 0 && (
