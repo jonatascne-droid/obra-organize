@@ -462,6 +462,7 @@ const UI_TEXT = {
     mc_title: 'Calculadora de metragem', mc_parede: 'parede', mc_paredes: 'paredes',
     mc_ambiente_fechado: 'Ambiente fechado', mc_ambientes_fechados: (n) => `${n} ambientes fechados`,
     mc_hint: 'Scroll = zoom · Arrastar fundo = mover · Arraste a ponta laranja = angular · Clique no cômodo = selecionar',
+    mc_area_desenho: 'Área de desenho',
     mc_vazio_titulo: 'Clique em "Criar parede" para começar',
     mc_vazio_subtitulo: 'Use a roda do mouse para dar zoom · Arraste o fundo para mover',
     mc_criar_parede: 'Criar parede', mc_nova_parede: 'Nova parede',
@@ -815,6 +816,7 @@ const UI_TEXT = {
     mc_title: 'Calculadora de metraje', mc_parede: 'pared', mc_paredes: 'paredes',
     mc_ambiente_fechado: 'Ambiente cerrado', mc_ambientes_fechados: (n) => `${n} ambientes cerrados`,
     mc_hint: 'Scroll = zoom · Arrastrar fondo = mover · Arrastra la punta naranja = angular · Clic en el ambiente = seleccionar',
+    mc_area_desenho: 'Área de dibujo',
     mc_vazio_titulo: 'Haz clic en "Crear pared" para empezar',
     mc_vazio_subtitulo: 'Usa la rueda del mouse para hacer zoom · Arrastra el fondo para mover',
     mc_criar_parede: 'Crear pared', mc_nova_parede: 'Nueva pared',
@@ -1168,6 +1170,7 @@ const UI_TEXT = {
     mc_title: 'Measurement calculator', mc_parede: 'wall', mc_paredes: 'walls',
     mc_ambiente_fechado: 'Closed room', mc_ambientes_fechados: (n) => `${n} closed rooms`,
     mc_hint: 'Scroll = zoom · Drag background = move · Drag orange tip = rotate · Click room = select',
+    mc_area_desenho: 'Drawing area',
     mc_vazio_titulo: 'Click "Create wall" to get started',
     mc_vazio_subtitulo: 'Use the mouse wheel to zoom · Drag the background to move',
     mc_criar_parede: 'Create wall', mc_nova_parede: 'New wall',
@@ -6726,16 +6729,16 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
             })()}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400">{t('mc_hint')}</span>
+            <span className="hidden md:inline text-xs text-slate-400">{t('mc_hint')}</span>
             <button onClick={onClose} className="text-slate-400 hover:text-blueprint p-1.5 rounded-lg hover:bg-slate-100 ml-2">
               <Icon path={ICONS.x} className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
           {/* Canvas */}
-          <div className="flex-1 relative overflow-hidden bg-slate-50 cursor-crosshair select-none">
+          <div className="relative overflow-hidden bg-slate-50 cursor-crosshair select-none flex-shrink-0 h-64 md:h-auto md:flex-1 border-2 border-slate-200 md:border-2 m-2 md:m-3 rounded-xl">
             <canvas ref={canvasRef}
               style={{ width: '100%', height: '100%', display: 'block', cursor: 'crosshair', touchAction: 'none' }}
               onMouseDown={onMouseDown}
@@ -6744,6 +6747,12 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
               onMouseLeave={onMouseUp}
               onWheel={onWheel}
             />
+            {/* Rótulo fixo indicando a área de desenho — no celular o quadro do canvas
+                ficava pouco evidente, então marcamos a moldura e damos um nome pra ela. */}
+            <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-medium text-blueprint shadow-sm pointer-events-none">
+              <Icon path={ICONS.ruler} className="w-3.5 h-3.5 text-safety" />
+              {t('mc_area_desenho')}
+            </div>
             {walls.length === 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <div className="text-4xl mb-3" style={{fontSize:"2rem"}}>m²</div>
@@ -6764,7 +6773,7 @@ function MeasurementCalculator({ onClose, onApply, companyId, measurementId, sav
           </div>
 
           {/* Right panel */}
-          <div className="w-full md:w-64 border-t md:border-t-0 md:border-l border-slate-100 flex flex-col bg-white overflow-y-auto max-h-48 md:max-h-none">
+          <div className="w-full md:w-64 border-t md:border-t-0 md:border-l border-slate-100 flex flex-col bg-white overflow-y-auto flex-1 md:flex-none md:max-h-none">
 
             {/* Add wall */}
             <div className="p-4 border-b border-slate-100">
