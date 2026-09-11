@@ -202,7 +202,13 @@ const friendlyError = (err, fallbackKey) => {
 // gravação em si é interrompida aqui, antes de qualquer chamada ao banco (a RLS
 // bloquearia de qualquer forma, mas assim o aviso é imediato e não depende do erro
 // cru do Postgres).
-const demoBlocked = () => { alert(t('demo_bloqueado')); return false; };
+// O aviso em si é um modal (não um alert nativo) pra poder oferecer, além de "OK",
+// um botão "Desbloquear conta" que leva à página de planos — daí o pub/sub simples
+// abaixo: demoBlocked() dispara os listeners inscritos pelo modal (montado uma vez
+// dentro do AdminArea), sem precisar passar callbacks por todos os componentes que
+// chamam demoBlocked() lá no fundo da árvore.
+const demoBlockListeners = new Set();
+const demoBlocked = () => { demoBlockListeners.forEach(fn => fn()); return false; };
 
 // ============================================================
 // IDIOMA DO SISTEMA (PT / ES / EN) — conforme o país da empresa
@@ -236,6 +242,9 @@ const UI_TEXT = {
     dash_painel_administrativo: 'Painel administrativo',
     demo_banner: 'Modo demonstração — dados de exemplo, apenas para visualização. Nada aqui pode ser editado ou salvo.',
     demo_bloqueado: 'Modo demonstração — esta é uma conta de teste e as alterações não são salvas.',
+    demo_modal_titulo: 'Conta de demonstração',
+    demo_ok: 'OK',
+    demo_desbloquear: 'Desbloquear conta',
     emp_area_colaborador: 'Área do colaborador',
     emp_ola: (n) => `Olá, ${n}`,
     emp_tarefas_subtitulo: 'Clique em uma obra para ver os detalhes, deixar notas ou solicitar alterações',
@@ -614,6 +623,9 @@ const UI_TEXT = {
     dash_painel_administrativo: 'Panel administrativo',
     demo_banner: 'Modo demostración — datos de ejemplo, solo para visualización. Nada aquí se puede editar ni guardar.',
     demo_bloqueado: 'Modo demostración — esta es una cuenta de prueba y los cambios no se guardan.',
+    demo_modal_titulo: 'Cuenta de demostración',
+    demo_ok: 'OK',
+    demo_desbloquear: 'Desbloquear cuenta',
     emp_area_colaborador: 'Área del colaborador',
     emp_ola: (n) => `Hola, ${n}`,
     emp_tarefas_subtitulo: 'Haz clic en una obra para ver los detalles, dejar notas o solicitar cambios',
@@ -992,6 +1004,9 @@ const UI_TEXT = {
     dash_painel_administrativo: 'Admin panel',
     demo_banner: 'Demo mode — sample data, view-only. Nothing here can be edited or saved.',
     demo_bloqueado: 'Demo mode — this is a test account and changes are not saved.',
+    demo_modal_titulo: 'Demo account',
+    demo_ok: 'OK',
+    demo_desbloquear: 'Unlock account',
     emp_area_colaborador: 'Team member area',
     emp_ola: (n) => `Hi, ${n}`,
     emp_tarefas_subtitulo: 'Click on a project to see details, leave notes, or request changes',
@@ -1491,6 +1506,27 @@ const Modal = ({ title, onClose, children, wide }) => (
     </div>
   </div>
 );
+
+// Modal do aviso de conta de demonstração — ver comentário perto de demoBlocked().
+// Fica montado uma vez dentro do AdminArea e escuta demoBlockListeners.
+function DemoBlockedModal() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const show = () => setOpen(true);
+    demoBlockListeners.add(show);
+    return () => demoBlockListeners.delete(show);
+  }, []);
+  if (!open) return null;
+  return (
+    <Modal title={t('demo_modal_titulo')} onClose={() => setOpen(false)}>
+      <p className="text-sm text-slate-600 mb-5">{t('demo_bloqueado')}</p>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>{t('demo_ok')}</Button>
+        <Button className="flex-1" onClick={() => { setOpen(false); window.location.hash = '#planos'; }}>{t('demo_desbloquear')}</Button>
+      </div>
+    </Modal>
+  );
+}
 
 const StatCard = ({ icon, label, value, sub, accent = 'blueprint' }) => (
   <div className="bg-white rounded-2xl border border-slate-100 p-4 md:p-5 shadow-sm">
@@ -3226,6 +3262,7 @@ function AdminArea({ profile, onLogout }) {
           {t('demo_banner')}
         </div>
       )}
+      {isViewer && <DemoBlockedModal />}
       {company?.subscription_status === 'pendente_pagamento' && (
         <SubscriptionBanner />
       )}
