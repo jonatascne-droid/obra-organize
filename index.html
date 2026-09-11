@@ -576,6 +576,8 @@ const UI_TEXT = {
     sb_erro_checkout: 'Não foi possível abrir o checkout agora. Tente novamente em instantes.',
     sb_titulo: 'Assinatura pendente de pagamento', sb_subtitulo: 'Finalize o pagamento para manter o acesso completo ao sistema.',
     sb_abrindo: 'Abrindo...', sb_finalizar: 'Finalizar assinatura',
+    pg_titulo: 'Finalize o pagamento para continuar', pg_subtitulo: 'Sua conta foi criada, mas o acesso ao sistema só é liberado depois que o pagamento da assinatura for concluído.',
+    pg_ver_demo: 'Ver demonstração',
     notif_title: 'Notificações', notif_subtitle_admin: 'Notas da equipe e solicitações de alteração de valores',
     notif_vazio_titulo: 'Nenhuma notificação por aqui', notif_vazio_subtitulo_admin: 'Notas da equipe e pedidos de alteração de valores vão aparecer nesta área.',
     notif_notas_equipe: 'Notas da equipe', notif_nova: (n) => `${n} nova(s)`,
@@ -956,6 +958,8 @@ const UI_TEXT = {
     pn_escrever_nota: 'Escribir una nota para el equipo...', pn_enviar: 'Enviar',
     sb_erro_checkout: 'No fue posible abrir el checkout ahora. Inténtalo de nuevo en un momento.',
     sb_titulo: 'Suscripción pendiente de pago', sb_subtitulo: 'Completa el pago para mantener el acceso completo al sistema.',
+    pg_titulo: 'Completa el pago para continuar', pg_subtitulo: 'Tu cuenta fue creada, pero el acceso al sistema solo se libera después de completar el pago de la suscripción.',
+    pg_ver_demo: 'Ver demostración',
     sb_abrindo: 'Abriendo...', sb_finalizar: 'Completar suscripción',
     notif_title: 'Notificaciones', notif_subtitle_admin: 'Notas del equipo y solicitudes de cambio de valores',
     notif_vazio_titulo: 'Ninguna notificación por aquí', notif_vazio_subtitulo_admin: 'Las notas del equipo y las solicitudes de cambio de valores aparecerán aquí.',
@@ -1337,6 +1341,8 @@ const UI_TEXT = {
     pn_escrever_nota: 'Write a note for the team...', pn_enviar: 'Send',
     sb_erro_checkout: "Couldn't open checkout right now. Please try again shortly.",
     sb_titulo: 'Subscription payment pending', sb_subtitulo: 'Complete the payment to keep full access to the system.',
+    pg_titulo: 'Complete your payment to continue', pg_subtitulo: 'Your account was created, but access to the system is only unlocked once your subscription payment is complete.',
+    pg_ver_demo: 'View demo',
     sb_abrindo: 'Opening...', sb_finalizar: 'Complete subscription',
     notif_title: 'Notifications', notif_subtitle_admin: 'Team notes and value change requests',
     notif_vazio_titulo: 'No notifications here', notif_vazio_subtitulo_admin: 'Team notes and value change requests will show up here.',
@@ -3117,8 +3123,15 @@ function CompanyFormModal({ company, onClose, onSaved, isViewer }) {
 // ============================================================
 // ADMIN AREA
 // ============================================================
-function SubscriptionBanner() {
+// Bloqueio real de acesso pra empresa sem assinatura ativa (ver uso em
+// AdminArea, logo abaixo de isViewer): antes disso existia só um banner de
+// aviso (SubscriptionBanner) no topo do dashboard, mas o resto do app
+// continuava funcionando normalmente mesmo sem pagamento — dava pra criar
+// obras, gerar PDF etc. Essa tela substitui o app inteiro até o pagamento
+// ser concluído, e oferece a demo como alternativa enquanto isso.
+function PaymentGate({ onLogout }) {
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [error, setError] = useState('');
 
   const goToCheckout = async () => {
@@ -3133,20 +3146,31 @@ function SubscriptionBanner() {
     window.location.href = data.url;
   };
 
+  const goToDemo = async () => {
+    setDemoLoading(true);
+    await db.auth.signOut();
+    window.location.hash = '#demo';
+  };
+
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center flex-shrink-0">
-          <Icon path={ICONS[currentCurrencyIcon()]} className="w-5 h-5" />
+    <div className="min-h-screen bg-blueprint flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+        <div className="w-14 h-14 mx-auto mb-4 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center">
+          <Icon path={ICONS[currentCurrencyIcon()]} className="w-7 h-7" />
         </div>
-        <div>
-          <div className="text-sm font-medium text-amber-900">{t('sb_titulo')}</div>
-          <div className="text-xs text-amber-700">{t('sb_subtitulo')}</div>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        {error && <span className="text-xs text-red-600">{error}</span>}
-        <Button onClick={goToCheckout} disabled={loading} className="!py-2 !px-4 text-sm">{loading ? t('sb_abrindo') : t('sb_finalizar')}</Button>
+        <h1 className="font-display font-semibold text-xl mb-2">{t('pg_titulo')}</h1>
+        <p className="text-sm text-slate-500 mb-6">{t('pg_subtitulo')}</p>
+        {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
+        <Button onClick={goToCheckout} disabled={loading} className="w-full mb-3">
+          {loading ? t('sb_abrindo') : t('sb_finalizar')}
+        </Button>
+        <Button variant="outline" onClick={goToDemo} disabled={demoLoading} className="w-full mb-3">
+          <Icon path={ICONS.eye} className="w-4 h-4" />
+          {t('pg_ver_demo')}
+        </Button>
+        <button onClick={onLogout} className="text-xs text-slate-400 hover:text-blueprint">
+          {t('nav_sair')}
+        </button>
       </div>
     </div>
   );
@@ -3227,6 +3251,14 @@ function AdminArea({ profile, onLogout }) {
   // demoBlocked(), antes de qualquer chamada ao banco.
   const isViewer = profile.role === 'viewer';
 
+  // Bloqueio real: empresa sem assinatura ativa não usa o sistema de
+  // verdade, só vê a tela de cobrança (ou vai pra demo). Antes disso só
+  // existia um banner de aviso, e o resto do app continuava acessível
+  // normalmente mesmo sem pagamento.
+  if (!isViewer && company && company.subscription_status !== 'ativo') {
+    return <PaymentGate onLogout={onLogout} />;
+  }
+
   const pendingCount = notifications.filter(n => n.status === 'pendente').length + noteNotifications.filter(n => !n.is_read).length;
 
   const navItems = [
@@ -3263,9 +3295,6 @@ function AdminArea({ profile, onLogout }) {
         </div>
       )}
       {isViewer && <DemoBlockedModal />}
-      {company?.subscription_status === 'pendente_pagamento' && (
-        <SubscriptionBanner />
-      )}
       {page === 'dashboard' && (
         <>
           <PageHeader title={t('dashboard_title')} subtitle={t('dashboard_subtitle')} />
