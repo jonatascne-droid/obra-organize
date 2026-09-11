@@ -1332,6 +1332,7 @@ const ICONS = {
   shirt: '<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>',
   receipt: '<path d="M4 2v20l2-1.5L8 22l2-1.5L12 22l2-1.5L16 22l2-1.5L20 22V2l-2 1.5L16 2l-2 1.5L12 2l-2 1.5L8 2 6 3.5 4 2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/>',
   creditcard: '<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
 };
 
 // ============================================================
@@ -1756,6 +1757,11 @@ const LANDING_TEXT = {
     loading: 'Loading...',
     devBy: 'System developed by', devByQuestion: 'Want to build your own system? Contact us:',
     usComingSoon: 'The United States is still under development and cannot be selected right now.',
+    accountExistsTitle: 'This account already exists',
+    accountExistsBody: "We found a pending account with this email, but the password you entered doesn't match. If you forgot your password, request a reset link below.",
+    forgotPasswordCta: 'Forgot my password',
+    forgotPasswordSent: "We've sent a password reset link to your email. Check your inbox.",
+    sending: 'Sending...',
   },
   pt: {
     login: 'Já tenho conta · Entrar',
@@ -1803,6 +1809,11 @@ const LANDING_TEXT = {
     loading: 'Carregando...',
     devBy: 'Sistema desenvolvido pela', devByQuestion: 'Quer desenvolver seu próprio sistema? Entre em contato:',
     usComingSoon: 'Estados Unidos ainda está em desenvolvimento e não pode ser selecionado no momento.',
+    accountExistsTitle: 'Essa conta já existe',
+    accountExistsBody: 'Encontramos uma conta pendente de pagamento com esse e-mail, mas a senha digitada não corresponde. Se você esqueceu a senha, solicite um link de redefinição abaixo.',
+    forgotPasswordCta: 'Esqueci minha senha',
+    forgotPasswordSent: 'Enviamos um link de redefinição de senha para o seu e-mail. Verifique sua caixa de entrada.',
+    sending: 'Enviando...',
   },
   es: {
     login: '¿Ya tienes cuenta? · Iniciar sesión',
@@ -1850,6 +1861,11 @@ const LANDING_TEXT = {
     loading: 'Cargando...',
     devBy: 'Sistema desarrollado por', devByQuestion: '¿Quieres desarrollar tu propio sistema? Contáctanos:',
     usComingSoon: 'Estados Unidos todavía está en desarrollo y no se puede seleccionar por el momento.',
+    accountExistsTitle: 'Esa cuenta ya existe',
+    accountExistsBody: 'Encontramos una cuenta pendiente de pago con ese correo, pero la contraseña ingresada no coincide. Si olvidaste tu contraseña, solicita un enlace de restablecimiento abajo.',
+    forgotPasswordCta: 'Olvidé mi contraseña',
+    forgotPasswordSent: 'Enviamos un enlace para restablecer tu contraseña a tu correo. Revisa tu bandeja de entrada.',
+    sending: 'Enviando...',
   },
 };
 
@@ -1865,6 +1881,9 @@ function LandingPage({ onBackToLogin, mode = 'generic' }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [loginFailed, setLoginFailed] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(mode === 'generic');
 
   // Quando o modo muda (ex: o redirecionamento abaixo troca a URL de #planos pra #es/#br),
@@ -1936,12 +1955,14 @@ function LandingPage({ onBackToLogin, mode = 'generic' }) {
       return;
     }
 
-    // Loga automaticamente com a conta recém-criada para poder abrir o checkout do Stripe.
+    // Loga automaticamente (conta nova, ou retomando uma conta já existente com pagamento
+    // pendente) pra poder abrir o checkout do Stripe. Se a senha digitada não bater — típico
+    // de quem está retomando um cadastro antigo e não lembra a senha certa — mostra a tela de
+    // "essa conta já existe" com a opção de redefinir a senha, em vez do sucesso genérico.
     const { error: loginError } = await db.auth.signInWithPassword({ email: form.email, password: form.password });
     if (loginError) {
-      // Conta foi criada, mas login automático falhou (raro). Segue para a tela de sucesso normal.
       setSaving(false);
-      setSuccess(true);
+      setLoginFailed(true);
       return;
     }
 
@@ -1963,12 +1984,47 @@ function LandingPage({ onBackToLogin, mode = 'generic' }) {
     setSuccess(true);
   };
 
+  const handleForgotPassword = async () => {
+    setForgotLoading(true);
+    await db.auth.resetPasswordForEmail(form.email, {
+      redirectTo: window.location.origin + window.location.pathname,
+    });
+    setForgotLoading(false);
+    setForgotSent(true);
+  };
+
   if (detectingLocation) {
     return (
       <div className="min-h-screen bg-blueprint flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-white/20 border-t-safety rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400 text-sm">{t.loading}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loginFailed) {
+    return (
+      <div className="min-h-screen bg-blueprint flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center fade-in">
+          <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Icon path={ICONS.lock} className="w-7 h-7" />
+          </div>
+          <h2 className="font-display text-xl font-bold text-blueprint mb-2">{t.accountExistsTitle}</h2>
+          <p className="text-sm text-slate-500 mb-6">{t.accountExistsBody}</p>
+          {forgotSent ? (
+            <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 mb-2">
+              {t.forgotPasswordSent}
+            </div>
+          ) : (
+            <Button className="w-full mb-2" onClick={handleForgotPassword} disabled={forgotLoading}>
+              {forgotLoading ? t.sending : t.forgotPasswordCta}
+            </Button>
+          )}
+          <button type="button" onClick={onBackToLogin} className="block w-full text-center text-sm text-slate-500 hover:text-safety transition-colors pt-1">
+            {t.successCta}
+          </button>
         </div>
       </div>
     );
