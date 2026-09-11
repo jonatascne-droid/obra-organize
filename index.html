@@ -4853,7 +4853,7 @@ function FinanceiroProjectModal({ project, installments, companyId, onClose, onC
           </div>
         </div>
 
-        {paymentMode === 'total' && project.payment_mode !== 'total' && (
+        {paymentMode === 'total' && (project.payment_mode !== 'total' || installments.length === 0) && (
           <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-4 space-y-3">
             <p className="text-xs text-slate-500">{t('fpm_total_texto')}</p>
             <Button onClick={applyTotal} disabled={saving} className="w-full">{saving ? t('fpm_aplicando') : t('fpm_aplicar_total')}</Button>
