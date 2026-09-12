@@ -273,6 +273,7 @@ const UI_TEXT = {
     fin_equipe_salarios: 'Equipe & salários', fin_ver_salarios: 'Ver detalhes em Salários',
     fin_pago_equipe: 'Pago à equipe (geral)', fin_pendente_equipe: 'Pendente de pagamento à equipe',
     fin_obras_vazio_titulo: 'Nenhuma obra cadastrada', fin_obras_vazio_subtitulo: 'Cadastre obras na aba Obras para acompanhar os recebimentos aqui.',
+    fin_mostrar_arquivadas: 'Mostrar arquivadas',
     fin_inclui_imposto: 'Inclui', fin_de_imposto: 'de imposto',
     fin_status_recebido: 'Recebido', fin_status_pendente: 'Pendente', fin_status_atrasado: 'Atrasado', fin_status_parcelas: 'parcelas',
     common_editar: 'Editar', common_reativar: 'Reativar', common_arquivar: 'Arquivar', common_mantem_dados: 'mantém dados', common_excluir_definitivo: 'Excluir definitivamente',
@@ -313,6 +314,7 @@ const UI_TEXT = {
     pag_secao_funcionarios: (month) => `Funcionários registrados — folha de ${month}`,
     pag_vazio_autonomos: 'Nenhum pagamento de autônomo pendente ou registrado.',
     pag_vazio_funcionarios: 'Nenhum funcionário registrado cadastrado.',
+    pag_mostrar_arquivados: 'Mostrar arquivados',
     pag_status_pago: 'Pago', pag_status_a_pagar: 'A pagar', pag_status_atrasado: 'Atrasado',
     pag_marcar_pago: 'Marcar como pago', pag_pago_em: (date) => `Pago em ${date}`,
     pag_dia: (day) => `Dia ${day}`,
@@ -619,7 +621,7 @@ const UI_TEXT = {
     efm_erro_generico: 'Error al guardar el colaborador.',
     pf_erro_generico: 'Error al guardar la obra. Inténtalo de nuevo.',
     nav_dashboard: 'Panel', nav_obras: 'Obras', nav_equipe: 'Equipo', nav_financeiro: 'Finanzas',
-    nav_salarios: 'Salarios', nav_pagamentos: 'Pagos', nav_servicos: 'Servicios', nav_clientes: 'Clientes', nav_metragens: 'Metrajes',
+    nav_salarios: 'Sueldos', nav_pagamentos: 'Pagos', nav_servicos: 'Servicios', nav_clientes: 'Clientes', nav_metragens: 'Metrajes',
     nav_notas_fiscais: 'Facturas', nav_notificacoes: 'Notificaciones', nav_sair: 'Salir',
     appshell_editar_perfil_empresa: 'Editar perfil de la empresa', appshell_mais: 'Más',
     nav_tarefas: 'Plan de tareas', nav_meu_dashboard: 'Mi panel',
@@ -655,15 +657,16 @@ const UI_TEXT = {
     fin_valor_liquido: 'Valor neto de los presupuestos', fin_valor_liquido_sub: 'Total menos el impuesto trasladado',
     fin_grafico_titulo: 'Valor neto vs. impuesto (total en presupuestos)',
     fin_valor_liquido_curto: 'Valor neto', fin_imposto_repassado_curto: 'Impuesto trasladado', fin_imposto_absorvido_curto: 'Impuesto absorbido',
-    fin_equipe_salarios: 'Equipo y salarios', fin_ver_salarios: 'Ver detalles en Salarios',
+    fin_equipe_salarios: 'Equipo y sueldos', fin_ver_salarios: 'Ver detalles en Sueldos',
     fin_pago_equipe: 'Pagado al equipo (general)', fin_pendente_equipe: 'Pendiente de pago al equipo',
     fin_obras_vazio_titulo: 'Ninguna obra registrada', fin_obras_vazio_subtitulo: 'Registra obras en la pestaña Obras para seguir los cobros aquí.',
+    fin_mostrar_arquivadas: 'Mostrar archivadas',
     fin_inclui_imposto: 'Incluye', fin_de_imposto: 'de impuesto',
     fin_status_recebido: 'Cobrado', fin_status_pendente: 'Pendiente', fin_status_atrasado: 'Atrasado', fin_status_parcelas: 'cuotas',
     common_editar: 'Editar', common_reativar: 'Reactivar', common_arquivar: 'Archivar', common_mantem_dados: 'conserva los datos', common_excluir_definitivo: 'Eliminar definitivamente',
     busca_sem_resultado: 'Ningún resultado encontrado.',
     busca_obras_placeholder: 'Buscar por nombre, cliente o valor...',
-    busca_equipe_placeholder: 'Buscar por nombre, correo o salario...',
+    busca_equipe_placeholder: 'Buscar por nombre, correo o sueldo...',
     busca_pagamentos_placeholder: 'Buscar por nombre, obra o valor...',
     busca_servicos_placeholder: 'Buscar por nombre o descripción...',
     busca_metragens_placeholder: 'Buscar por nombre...',
@@ -676,13 +679,13 @@ const UI_TEXT = {
     equipe_confirmar_arquivar: (name) => `¿Archivar a "${name}"? Su acceso al sistema será desactivado, pero todo el historial financiero permanece en los paneles. Deja de aparecer para asignar en nuevas obras.`,
     equipe_confirmar_excluir: (name) => `¿Eliminar definitivamente a "${name}"? Esta acción elimina al colaborador y todo el historial vinculado a él de los paneles, sin posibilidad de recuperación.`,
     sal_locale: 'es-ES',
-    sal_title: 'Salarios y equipo', sal_subtitle: (month) => `Visión financiera del equipo · ${month}`,
+    sal_title: 'Sueldos y equipo', sal_subtitle: (month) => `Visión financiera del equipo · ${month}`,
     sal_total_equipe: 'Total del equipo', sal_total_equipe_sub: (reg, free) => `${reg} contratados · ${free} autónomos`,
     sal_total_pago: 'Total pagado (general)', sal_total_pendente: 'Total pendiente (general)', sal_projetos_ativos: 'Proyectos activos',
-    sal_grafico_historico: 'Historial de salarios registrados (últimos 6 meses)',
+    sal_grafico_historico: 'Historial de sueldos registrados (últimos 6 meses)',
     sal_pago: 'Pagado', sal_pendente: 'Pendiente',
     sal_grafico_distribuicao: 'Distribución de pagos',
-    sal_salarios_pagos: 'Salarios pagados', sal_salarios_pendentes: 'Salarios pendientes',
+    sal_salarios_pagos: 'Sueldos pagados', sal_salarios_pendentes: 'Sueldos pendientes',
     sal_freelance_pago: 'Autónomos pagado', sal_freelance_pendente: 'Autónomos pendiente',
     sal_mostrar_arquivados: 'Mostrar archivados',
     sal_folha_titulo: (month) => `Colaboradores contratados — nómina de ${month}`,
@@ -698,6 +701,7 @@ const UI_TEXT = {
     pag_secao_funcionarios: (month) => `Empleados registrados — nómina de ${month}`,
     pag_vazio_autonomos: 'Ningún pago de autónomo pendiente o registrado.',
     pag_vazio_funcionarios: 'Ningún empleado registrado dado de alta.',
+    pag_mostrar_arquivados: 'Mostrar archivados',
     pag_status_pago: 'Pagado', pag_status_a_pagar: 'A pagar', pag_status_atrasado: 'Atrasado',
     pag_marcar_pago: 'Marcar como pagado', pag_pago_em: (date) => `Pagado el ${date}`,
     pag_dia: (day) => `Día ${day}`,
@@ -763,7 +767,7 @@ const UI_TEXT = {
     pd_pagamentos_equipe: 'Pagos al equipo', pd_nenhum_colaborador: 'Ningún colaborador asignado a esta obra.',
     pd_voce: 'Tú', pd_voce_mesmo: (name) => `${name} (tú mismo)`, pd_trabalho_proprio: 'Trabajo propio',
     pd_dia: 'día', pd_dias: 'días', pd_pago_sufixo: 'pagado', pd_pendente_sufixo: 'pendiente',
-    pricing_salario: 'Salario',
+    pricing_salario: 'Sueldo',
     pd_valor_servico_recebimento: 'Valor del servicio y cobro', pd_valor_real_servico: 'Valor real del servicio',
     pd_calculado_pelos_servicos: (v) => `Calculado por los servicios: ${v}`,
     pd_imposto_repassado_pct: (pct) => `Impuesto trasladado (${pct}%)`, pd_imposto_absorvido_pct: (pct) => `Impuesto absorbido (${pct}%)`,
@@ -863,14 +867,14 @@ const UI_TEXT = {
     edm_registrado_info: (v, day) => `Contratado · ${v}/mes · día ${day}`,
     edm_obras_atribuidas: 'Obras asignadas', edm_obras_concluidas: 'Obras concluidas',
     edm_total_recebido: 'Total cobrado', edm_pendente: 'Pendiente',
-    edm_grafico_salarios: 'Salarios cobrados (últimos 6 meses)',
+    edm_grafico_salarios: 'Sueldos cobrados (últimos 6 meses)',
     edm_obras_vinculadas: 'Obras vinculadas',
     edm_ver_historico: 'Ver historial completo de pagos →',
     shm_title: (name) => `Historial · ${name}`,
     shm_novo_pagamento: 'Nuevo pago', shm_referente_a: 'Referente a', shm_valor: 'Valor', shm_data_pagamento: 'Fecha del pago',
     shm_pago: 'Pagado', shm_confirmar_excluir: '¿Eliminar este registro de pago?',
-    shm_nenhum_pagamento: 'Ningún pago registrado todavía. Marca el salario del mes actual como pagado en la lista de Salarios.',
-    shm_salario_mensal: 'Salario mensual',
+    shm_nenhum_pagamento: 'Ningún pago registrado todavía. Marca el sueldo del mes actual como pagado en la lista de Sueldos.',
+    shm_salario_mensal: 'Sueldo mensual',
     empd_obras_atribuidas: 'Obras asignadas', empd_obras_concluidas: 'Obras concluidas',
     empd_total_recebido: 'Total cobrado', empd_pendente_recebimento: 'Pendiente de cobro',
     empd_todas_obras: 'Todas las obras', empd_todos_anos: 'Todos los años', empd_todos_meses: 'Todos los meses',
@@ -945,8 +949,8 @@ const UI_TEXT = {
     efm_email_existe: 'Este email ya tiene una cuenta en el sistema. El colaborador quedará vinculado a esa cuenta existente y seguirá usando la contraseña que ya tiene — no hace falta definir una nueva.',
     efm_telefone: 'Teléfono', efm_endereco: 'Dirección / ubicación', efm_endereco_ph: 'Ciudad, barrio...',
     efm_tipo_vinculo: 'Tipo de vínculo', efm_freelance_opt: 'Autónomo', efm_registrado_opt: 'Contratado',
-    efm_salario_mensal_curr: (s) => `Salario mensual (${s})`, efm_dia_pagamento: 'Día de pago',
-    efm_data_inicio: 'Fecha de inicio', efm_data_primeiro_salario: 'Fecha del primer salario',
+    efm_salario_mensal_curr: (s) => `Sueldo mensual (${s})`, efm_dia_pagamento: 'Día de pago',
+    efm_data_inicio: 'Fecha de inicio', efm_data_primeiro_salario: 'Fecha del primer sueldo',
     efm_salvar_alteracoes: 'Guardar cambios',
     ndm_title: 'Solicitud de cambio de valor',
     ndm_colaborador: 'Colaborador:', ndm_obra: 'Obra:', ndm_tipo: 'Tipo:',
@@ -1043,6 +1047,7 @@ const UI_TEXT = {
     fin_equipe_salarios: 'Team & payroll', fin_ver_salarios: 'See details in Payroll',
     fin_pago_equipe: 'Paid to team (overall)', fin_pendente_equipe: 'Pending payment to team',
     fin_obras_vazio_titulo: 'No projects yet', fin_obras_vazio_subtitulo: 'Add projects in the Projects tab to track payments here.',
+    fin_mostrar_arquivadas: 'Show archived',
     fin_inclui_imposto: 'Includes', fin_de_imposto: 'in tax',
     fin_status_recebido: 'Received', fin_status_pendente: 'Pending', fin_status_atrasado: 'Overdue', fin_status_parcelas: 'installments',
     common_editar: 'Edit', common_reativar: 'Reactivate', common_arquivar: 'Archive', common_mantem_dados: 'keeps data', common_excluir_definitivo: 'Delete permanently',
@@ -1083,6 +1088,7 @@ const UI_TEXT = {
     pag_secao_funcionarios: (month) => `Registered employees — ${month} payroll`,
     pag_vazio_autonomos: 'No freelancer payment pending or recorded.',
     pag_vazio_funcionarios: 'No registered employees yet.',
+    pag_mostrar_arquivados: 'Show archived',
     pag_status_pago: 'Paid', pag_status_a_pagar: 'Due', pag_status_atrasado: 'Overdue',
     pag_marcar_pago: 'Mark as paid', pag_pago_em: (date) => `Paid on ${date}`,
     pag_dia: (day) => `Day ${day}`,
@@ -4258,11 +4264,12 @@ function PaymentConfirmModal({ amount, onClose, onConfirm }) {
 function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paymentMethodEntries, companyId, onChanged, isViewer }) {
   const [confirming, setConfirming] = useState(null); // { kind: 'freelance', row } | { kind: 'salary', employee, existing }
   const [search, setSearch] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const monthKey = currentMonthKey();
   const monthLabel = new Date(monthKey + 'T00:00:00').toLocaleDateString(t('sal_locale'), { month: 'long', year: 'numeric' });
   const today = new Date().toISOString().slice(0, 10);
 
-  const activeEmployees = employees.filter(e => !e.archived);
+  const activeEmployees = showArchived ? employees : employees.filter(e => !e.archived);
   const q = search.trim().toLowerCase();
   const freelanceRows = (projectTeam || []).filter(row => {
     if (row.is_self) return false;
@@ -4340,7 +4347,13 @@ function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paym
   return (
     <>
       <PageHeader title={t('pag_title')} subtitle={t('pag_subtitle')} />
-      <SearchBox value={search} onChange={setSearch} placeholder={t('busca_pagamentos_placeholder')} />
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <SearchBox value={search} onChange={setSearch} placeholder={t('busca_pagamentos_placeholder')} className="mb-0 flex-1" />
+        <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer flex-shrink-0">
+          <input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} className="w-4 h-4 accent-safety rounded" />
+          {t('pag_mostrar_arquivados')}
+        </label>
+      </div>
 
       <h2 className="font-display font-semibold text-lg mb-4">{t('pag_secao_autonomos')}</h2>
       {freelanceRows.length === 0 ? (
@@ -4353,12 +4366,15 @@ function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paym
             const isPaid = row.payment_status === 'pago';
             const entries = methodsFor('project_team', row.id);
             return (
-              <div key={row.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                <div className="flex items-start justify-between mb-2">
+              <div key={row.id} className={`bg-white rounded-2xl border p-5 shadow-sm ${emp?.archived ? 'border-slate-200 opacity-60' : 'border-slate-100'}`}>
+                <div className="flex items-start justify-between mb-2 gap-2">
                   <div className="font-display font-semibold text-blueprint">{emp?.full_name}</div>
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${isPaid ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-amber-50 text-amber-700 border-amber-300'}`}>
-                    {isPaid ? t('pag_status_pago') : t('pag_status_a_pagar')}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {emp?.archived && <span className="text-xs font-medium px-2.5 py-1 rounded-full border bg-slate-100 text-slate-500 border-slate-200">{t('equipe_arquivado')}</span>}
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${isPaid ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 'bg-amber-50 text-amber-700 border-amber-300'}`}>
+                      {isPaid ? t('pag_status_pago') : t('pag_status_a_pagar')}
+                    </span>
+                  </div>
                 </div>
                 <div className="text-xs text-slate-400 mb-3">{project?.title || '—'}</div>
                 <div className="font-mono text-lg text-blueprint mb-1">{fmtCurrency(row.payment_value)}</div>
@@ -4393,10 +4409,13 @@ function PagamentosPage({ employees, projects, projectTeam, salaryPayments, paym
             const statusLabel = isPaid ? t('pag_status_pago') : (isLate ? t('pag_status_atrasado') : t('pag_status_a_pagar'));
             const statusClasses = isPaid ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : isLate ? 'bg-red-50 text-red-700 border-red-300' : 'bg-amber-50 text-amber-700 border-amber-300';
             return (
-              <div key={emp.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-                <div className="flex items-start justify-between mb-2">
+              <div key={emp.id} className={`bg-white rounded-2xl border p-5 shadow-sm ${emp.archived ? 'border-slate-200 opacity-60' : 'border-slate-100'}`}>
+                <div className="flex items-start justify-between mb-2 gap-2">
                   <div className="font-display font-semibold text-blueprint">{emp.full_name}</div>
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${statusClasses}`}>{statusLabel}</span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {emp.archived && <span className="text-xs font-medium px-2.5 py-1 rounded-full border bg-slate-100 text-slate-500 border-slate-200">{t('equipe_arquivado')}</span>}
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${statusClasses}`}>{statusLabel}</span>
+                  </div>
                 </div>
                 <div className="text-xs text-slate-400 mb-3">{t('pag_dia')(emp.payment_day || 1)}</div>
                 <div className="font-mono text-lg text-blueprint mb-1">{fmtCurrency(emp.salary)}</div>
@@ -4592,6 +4611,7 @@ function FinanceiroPage({ projects, companyId, salarySummary, onChanged, autoOpe
   const [installmentsByProject, setInstallmentsByProject] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [showArchivedProjects, setShowArchivedProjects] = useState(false);
 
   const loadInstallments = async () => {
     const { data } = await db.from('payment_installments').select('*').eq('company_id', companyId).order('installment_number');
@@ -4637,6 +4657,7 @@ function FinanceiroPage({ projects, companyId, salarySummary, onChanged, autoOpe
   }, [projects]);
 
   const activeProjects = projects.filter(p => !p.archived);
+  const displayProjects = showArchivedProjects ? projects : activeProjects;
   const totalReceivable = activeProjects.reduce((s, p) => s + Number(p.amount_to_receive || p.budget || 0), 0);
 
   let totalReceived = 0, totalPending = 0, totalOverdue = 0;
@@ -4757,12 +4778,18 @@ function FinanceiroPage({ projects, companyId, salarySummary, onChanged, autoOpe
       )}
 
       <h2 className="font-display font-semibold text-lg mb-4">{t('obras_title')}</h2>
-      {activeProjects.length > 0 && (
-        <SearchBox value={search} onChange={setSearch} placeholder={t('busca_obras_placeholder')} />
+      {projects.length > 0 && (
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <SearchBox value={search} onChange={setSearch} placeholder={t('busca_obras_placeholder')} className="mb-0 flex-1" />
+          <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer flex-shrink-0">
+            <input type="checkbox" checked={showArchivedProjects} onChange={e => setShowArchivedProjects(e.target.checked)} className="w-4 h-4 accent-safety rounded" />
+            {t('fin_mostrar_arquivadas')}
+          </label>
+        </div>
       )}
       {(() => {
         const q = search.trim().toLowerCase();
-        const filtered = activeProjects.filter(p => !q ||
+        const filtered = displayProjects.filter(p => !q ||
           p.title?.toLowerCase().includes(q) ||
           p.client_name?.toLowerCase().includes(q) ||
           fmtCurrency(p.amount_to_receive || p.budget).toLowerCase().includes(q));
@@ -4773,10 +4800,11 @@ function FinanceiroPage({ projects, companyId, salarySummary, onChanged, autoOpe
           {filtered.map(p => {
             const st = statusFor(p);
             return (
-              <div key={p.id} onClick={() => setViewingProject(p)} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+              <div key={p.id} onClick={() => setViewingProject(p)} className={`bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${p.archived ? 'border-slate-200 opacity-60' : 'border-slate-100'}`}>
                 <div className="flex items-start justify-between mb-2 gap-2">
                   <div className="font-display font-semibold text-blueprint">{p.title}</div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {p.archived && <span className="text-xs font-medium px-2.5 py-1 rounded-full border bg-slate-100 text-slate-500 border-slate-200">{t('obras_arquivada')}</span>}
                     <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${st.color}`}>{st.label}</span>
                     <div onClick={e => e.stopPropagation()}>
                       <ArchiveDeleteMenu
